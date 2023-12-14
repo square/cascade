@@ -1,3 +1,6 @@
 # cascade
-![Logo](/assets/Cash_App.png "Brought to you by CashApp.")
+<p align="left">
+  <img src="assets/Cash_App.png" alt="CashApp" width="100", height="100">
+</p>
+
 
