@@ -1,3 +1,3 @@
 # cascade
-![Logo](/assets/logo.png "Logo Title")
-Brought to you by CashApp.
+![Logo](/assets/Cash_App.png "Brought to you by CashApp.")
+
