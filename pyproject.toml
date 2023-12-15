@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "cascade"
 version = "0.0.1"
-description = ""
+description = "Library for model training in multi-cloud environment."
 authors = ["Block"]
 
 [tool.poetry.dependencies]
