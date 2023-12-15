@@ -4,10 +4,6 @@ version = "0.0.1"
 description = ""
 authors = ["Block"]
 
-[[tool.poetry.source]]
-name = "artifactory"
-url = "https://pypi.org/"
-
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
 cloudml-hypertune = "==0.1.0.dev6"
