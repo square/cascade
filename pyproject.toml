@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "cascade"
+name = "block-cascade"
 version = "0.0.1"
 description = "Library for model training in multi-cloud environment."
 readme = "README.md"
