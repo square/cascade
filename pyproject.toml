@@ -8,6 +8,11 @@ description = "Library for model training in multi-cloud environment."
 readme = "README.md"
 authors = ["Block"]
 
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
 cloudml-hypertune = "==0.1.0.dev6"
@@ -32,6 +37,7 @@ pytest = ">=7.3.1"
 pytest-env = "^0.8.1"
 pytest-mock = "^3.11.1"
 dask = {extras = ["distributed"], version = ">=2022"}
+pyfakefs = "<5.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

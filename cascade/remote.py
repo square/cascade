@@ -156,7 +156,7 @@ def remote(
                 "prefect-io_flow-name": flow_name,
                 "prefect-io_task-name": task_name,
                 "prefect-io_task-id": task_id,
-                "block_cascade-version": version("sq_cascade"),
+                "block_cascade-version": version("block_cascade"),
             }
             resource.environment = resource.environment or GcpEnvironmentConfig()
             if resource.environment.is_complete:
