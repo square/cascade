@@ -1,0 +1,44 @@
+[tool.poetry]
+name = "cascade"
+version = "0.0.1"
+description = ""
+authors = ["Block"]
+
+[[tool.poetry.source]]
+name = "artifactory"
+url = "https://pypi.org/"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.12"
+cloudml-hypertune = "==0.1.0.dev6"
+cloudpickle = "^2.0"
+databricks-cli = ">=0.17.7"
+gcsfs = "^2023.6.0"
+google-auth = "^2.23.2"
+google-cloud-aiplatform = ">=1.22.1"
+google-cloud-monitoring = "^2.16.0"
+google-cloud-resource-manager = "^1.10.4"
+importlib_resources = {version="*", python="<3.9"}
+prefect =  ">=1.0,<2.14"
+pydantic = ">=1.10.0,<2.0.0"
+s3fs = "^2023.6.0"
+
+[tool.poetry.group.torch.dependencies]
+torch = "1.13.1"
+torchvision = "0.14.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=7.3.1"
+pytest-env = "^0.8.1"
+pytest-mock = "^3.11.1"
+dask = {extras = ["distributed"], version = ">=2022"}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
