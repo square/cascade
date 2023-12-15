@@ -27,4 +27,4 @@ jobs:
         poetry install --without torch
     - name: Test
       run: |
-        pytest
+        poetry run pytest
