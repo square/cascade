@@ -146,7 +146,7 @@ class DatabricksExecutor(Executor):
                     self._fs = s3fs.S3FileSystem(**self.resource.s3_credentials)
                 break
             except KeyError:
-                logger.info(f"Waiting {wait} seconds to retry STS")
+                self.logger.info(f"Waiting {wait} seconds to retry STS")
                 n_retries += 1
                 time.sleep(wait)
                 wait *= 1.5
