@@ -312,6 +312,7 @@ class DatabricksExecutor(Executor):
         client = self.runs_api
         job = self.create_job()
         databricks_payload = job.create_payload()
+        self.logger.info(f"Databricks job payload: {databricks_payload}")
 
         self.active_job = client.submit_run(
             databricks_payload, version=DATABRICKS_API_VERSION
