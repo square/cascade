@@ -24,7 +24,7 @@ from slugify import slugify
 from cascade.executors.databricks.job import DatabricksJob
 from cascade.executors.databricks.resource import DatabricksResource
 from cascade.prefect import get_prefect_logger
-from cascade.utils import _base_module
+from cascade.utils import _infer_base_module
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 9:
     from importlib.resources import files
@@ -178,28 +178,27 @@ class DatabricksExecutor(Executor):
         Iterable[str]
             Set of modules to pickle by value
         """
-        try:
-            modules_to_pickle = set()
-            for module in self.resource.cloud_pickle_by_value or []:
-                try:
-                    modules_to_pickle.add(importlib.import_module(module))
-                except ModuleNotFoundError:
-                    raise RuntimeError(
-                        f"Unable to pickle {module} due to module not being "
-                        "found in current Python environment."
-                    )
-                except ImportError:
-                    raise RuntimeError(
-                        f"Unable to pickle {module} due to import error."
-                    )
-            if self.resource.cloud_pickle_infer_base_module:
-                module = _base_module(self.func)
-                modules_to_pickle.add(module)
-        except AttributeError as e:
-            # This happens when the function is not part of a module,
-            # but cloudpickle will typically handle that
-            self.logger.warn(f"Failed to infer base module of function: {e}")
-        return modules_to_pickle
+        modules_to_pickle = set()
+        if self.resource.cloud_pickle_infer_base_module:
+            base_module_name = _infer_base_module(self.func)
+            if base_module_name.startswith("__") or base_module_name is None:
+                self.logger.warn(
+                    "Unable to infer base module of function. Specify "
+                    "the base module in the `cloud_pickle_by_value` attribute "
+                    "of the DatabricksResource object if necessary."
+                )
+            else:
+                self.resource.cloud_pickle_by_value.append(base_module_name)
+        for module in self.resource.cloud_pickle_by_value or []:
+            try:
+                modules_to_pickle.add(importlib.import_module(module))
+            except ModuleNotFoundError:
+                raise RuntimeError(
+                    f"Unable to pickle {module} due to module not being "
+                    "found in current Python environment."
+                )
+            except ImportError:
+                raise RuntimeError(f"Unable to pickle {module} due to import error.")
 
     @property
     def api_client(self):

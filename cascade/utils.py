@@ -1,12 +1,9 @@
 import ast
 from functools import partial
-import importlib
 import inspect
 from inspect import signature
 import itertools
 import logging
-import pkgutil
-import sys
 from typing import List
 
 import prefect
@@ -51,12 +48,17 @@ def _get_object_args(obj: object):
     return list(signature(obj).parameters.keys())
 
 
-def _base_module(func):
+def _infer_base_module(func):
+    """
+    Inspects the function to find the base module in which it was defined.
+    Args:
+        func (Callable): a function
+    Returns:
+        str: the name of the base module in which the function was defined
+    """
     func_module = inspect.getmodule(func)
     base_name, *_ = func_module.__name__.partition(".")
-    base = sys.modules[base_name]
-    for _, name, _ in pkgutil.walk_packages(base.__path__):
-        return importlib.import_module(f"{base_name}.{name}")
+    return base_name
 
 
 def wrapped_partial(func, *args, **kwargs):
