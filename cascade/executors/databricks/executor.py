@@ -1,13 +1,6 @@
-from dataclasses import dataclass
-import importlib
-import os
-import sys
-import threading
-import time
 from types import ModuleType
 from typing import Callable, Iterable, Optional
 
-from cascade.executors.databricks.resource import DatabricksSecret
 from cascade.executors.executor import Executor
 
 try:
@@ -15,16 +8,23 @@ try:
 except ImportError:
     import pickle as cloudpickle  # Databricks renames cloudpickle to pickle in Runtimes 11 +  # noqa: E501
 
+import importlib
+import os
+import sys
+import threading
+import time
+import s3fs
+from dataclasses import dataclass
+from slugify import slugify
+
 from databricks_cli.cluster_policies.api import ClusterPolicyApi
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
-import s3fs
-from slugify import slugify
 
+from cascade.executors.databricks.resource import DatabricksSecret
 from cascade.executors.databricks.job import DatabricksJob
 from cascade.executors.databricks.resource import DatabricksResource
 from cascade.prefect import get_prefect_logger
-from cascade.utils import _infer_base_module
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 9:
     from importlib.resources import files
@@ -179,16 +179,6 @@ class DatabricksExecutor(Executor):
             Set of modules to pickle by value
         """
         modules_to_pickle = set()
-        if self.resource.cloud_pickle_infer_base_module:
-            base_module_name = _infer_base_module(self.func)
-            if base_module_name.startswith("__") or base_module_name is None:
-                self.logger.warn(
-                    "Unable to infer base module of function. Specify "
-                    "the base module in the `cloud_pickle_by_value` attribute "
-                    "of the DatabricksResource object if necessary."
-                )
-            else:
-                self.resource.cloud_pickle_by_value.append(base_module_name)
         for module in self.resource.cloud_pickle_by_value or []:
             try:
                 modules_to_pickle.add(importlib.import_module(module))
@@ -199,6 +189,7 @@ class DatabricksExecutor(Executor):
                 )
             except ImportError:
                 raise RuntimeError(f"Unable to pickle {module} due to import error.")
+        return modules_to_pickle
 
     @property
     def api_client(self):

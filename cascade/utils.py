@@ -57,8 +57,11 @@ def _infer_base_module(func):
         str: the name of the base module in which the function was defined
     """
     func_module = inspect.getmodule(func)
-    base_name, *_ = func_module.__name__.partition(".")
-    return base_name
+    try:
+        base_name, *_ = func_module.__name__.partition(".")
+        return base_name
+    except AttributeError:
+        return None
 
 
 def wrapped_partial(func, *args, **kwargs):

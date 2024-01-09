@@ -18,7 +18,7 @@ from cascade.prefect import (
     get_prefect_logger,
     is_prefect_cloud_deployment,
 )
-from cascade.utils import wrapped_partial
+from cascade.utils import _infer_base_module, wrapped_partial
 
 RESERVED_ARG_PREFIX = "remote_"
 
@@ -217,6 +217,19 @@ def remote(
             or "DatabricksResource" in type(resource).__name__
         ):
             prefect_logger.info("Executing task with DatabricksResource.")
+            failed_to_infer_base = (
+                "Unable to infer base module of function. Specify "
+                "the base module in the `cloud_pickle_by_value` attribute "
+                "of the DatabricksResource object if necessary."
+            )
+            if resource.cloud_pickle_infer_base_module:
+                base_module_name = _infer_base_module(func)
+                # if base module is __main__ or None, it can't be registered
+                if base_module_name.startswith("__") or base_module_name is None:
+                    prefect_logger.warn(failed_to_infer_base)
+                else:
+                    resource.cloud_pickle_by_value.append(base_module_name)
+
             executor = DatabricksExecutor(
                 func=packed_func,
                 resource=resource,
