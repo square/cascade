@@ -1,13 +1,6 @@
-from dataclasses import dataclass
-import importlib
-import os
-import sys
-import threading
-import time
 from types import ModuleType
 from typing import Callable, Iterable, Optional
 
-from cascade.executors.databricks.resource import DatabricksSecret
 from cascade.executors.executor import Executor
 
 try:
@@ -15,16 +8,23 @@ try:
 except ImportError:
     import pickle as cloudpickle  # Databricks renames cloudpickle to pickle in Runtimes 11 +  # noqa: E501
 
+import importlib
+import os
+import sys
+import threading
+import time
+import s3fs
+from dataclasses import dataclass
+from slugify import slugify
+
 from databricks_cli.cluster_policies.api import ClusterPolicyApi
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
-import s3fs
-from slugify import slugify
 
+from cascade.executors.databricks.resource import DatabricksSecret
 from cascade.executors.databricks.job import DatabricksJob
 from cascade.executors.databricks.resource import DatabricksResource
 from cascade.prefect import get_prefect_logger
-from cascade.utils import _base_module
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 9:
     from importlib.resources import files
@@ -146,7 +146,7 @@ class DatabricksExecutor(Executor):
                     self._fs = s3fs.S3FileSystem(**self.resource.s3_credentials)
                 break
             except KeyError:
-                logger.info(f"Waiting {wait} seconds to retry STS")
+                self.logger.info(f"Waiting {wait} seconds to retry STS")
                 n_retries += 1
                 time.sleep(wait)
                 wait *= 1.5
@@ -178,27 +178,17 @@ class DatabricksExecutor(Executor):
         Iterable[str]
             Set of modules to pickle by value
         """
-        try:
-            modules_to_pickle = set()
-            for module in self.resource.cloud_pickle_by_value or []:
-                try:
-                    modules_to_pickle.add(importlib.import_module(module))
-                except ModuleNotFoundError:
-                    raise RuntimeError(
-                        f"Unable to pickle {module} due to module not being "
-                        "found in current Python environment."
-                    )
-                except ImportError:
-                    raise RuntimeError(
-                        f"Unable to pickle {module} due to import error."
-                    )
-            if self.resource.cloud_pickle_infer_base_module:
-                module = _base_module(self.func)
-                modules_to_pickle.add(module)
-        except AttributeError as e:
-            # This happens when the function is not part of a module,
-            # but cloudpickle will typically handle that
-            self.logger.warn(f"Failed to infer base module of function: {e}")
+        modules_to_pickle = set()
+        for module in self.resource.cloud_pickle_by_value or []:
+            try:
+                modules_to_pickle.add(importlib.import_module(module))
+            except ModuleNotFoundError:
+                raise RuntimeError(
+                    f"Unable to pickle {module} due to module not being "
+                    "found in current Python environment."
+                )
+            except ImportError:
+                raise RuntimeError(f"Unable to pickle {module} due to import error.")
         return modules_to_pickle
 
     @property
@@ -312,6 +302,7 @@ class DatabricksExecutor(Executor):
         client = self.runs_api
         job = self.create_job()
         databricks_payload = job.create_payload()
+        self.logger.info(f"Databricks job payload: {databricks_payload}")
 
         self.active_job = client.submit_run(
             databricks_payload, version=DATABRICKS_API_VERSION

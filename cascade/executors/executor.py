@@ -113,7 +113,7 @@ class Executor(abc.ABC):
         try:
             with self.fs.open(self.output_filepath, "rb") as f:
                 result = cloudpickle.load(f)
-            self.fs.rm(self.storage_location, recursive=True)
+            self.fs.rm(self.storage_path, recursive=True)
         except FileNotFoundError:
             raise FileNotFoundError(
                 f"Could not find output file {self.output_filepath}"

@@ -1,7 +1,8 @@
 import logging
-import os
 import pickle
 import sys
+
+import boto3
 
 try:
     import cloudpickle
@@ -16,25 +17,26 @@ logger = logging.getLogger(__name__)
 
 
 def run():
-    bucket_location, storage_key = sys.argv[1], sys.argv[2]
-    mountpoint = f"/mnt/cascade/{storage_key}/"
-    dbfs_mountpoint = "/dbfs" + mountpoint
+    bucket_location, _ = sys.argv[1], sys.argv[2]
+    s3_bucket, object_path = bucket_location.replace("s3://", "").split("/", 1)
 
-    dbutils.fs.mount(  # dbutils is populated in cluster namespace without import  # noqa: E501, F821
-        bucket_location.replace("s3://", "s3n://"),
-        mountpoint,
-    )
     try:
-        with open(os.path.join(dbfs_mountpoint, INPUT_FILENAME), "rb") as f:
-            func = cloudpickle.load(f)
-
+        s3 = boto3.resource("s3")
+        func = cloudpickle.loads(
+            s3.Bucket(s3_bucket)
+            .Object(f"{object_path}/{INPUT_FILENAME}")
+            .get()["Body"]
+            .read()
+        )
         logger.info("Starting execution")
+
         result = func()
 
         logger.info(f"Saving output of task to {bucket_location}/{OUTPUT_FILENAME}")
         try:
-            with open(os.path.join(dbfs_mountpoint, OUTPUT_FILENAME), "wb") as f:
-                pickle.dump(result, f)
+            s3.Bucket(s3_bucket).Object(f"{object_path}/{OUTPUT_FILENAME}").put(
+                Body=pickle.dumps(result)
+            )
         except RuntimeError as e:
             logger.error(
                 "Failed to serialize user function return value. Be sure not to return "
@@ -42,8 +44,9 @@ def run():
                 "Spark dataframes to Pandas dataframes before returning."
             )
             raise e
-    finally:
-        dbutils.fs.unmount(mountpoint)  # noqa: F821
+    except RuntimeError as e:
+        logger.error("Failed to execute user function")
+        raise e
 
 
 if __name__ == "__main__":
