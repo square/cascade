@@ -6,8 +6,8 @@ import google.auth
 from google.cloud import resourcemanager_v3
 from prefect.backend.flow import FlowView
 
-from cascade.gcp import VertexAIEnvironmentInfoProvider
-from cascade.prefect.v1 import get_from_prefect_context
+from block.cascade.gcp import VertexAIEnvironmentInfoProvider
+from block.cascade.prefect.v1 import get_from_prefect_context
 
 
 class PrefectEnvironmentClient(VertexAIEnvironmentInfoProvider):

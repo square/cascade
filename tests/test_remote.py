@@ -18,18 +18,20 @@ GCP_PROJECT = "test-project"
 def patch_prefect_apis(mocker):
     if PREFECT_VERSION == 2:
         mocker.patch(
-            "cascade.prefect.v2.get_run_logger",
+            "block.cascade.prefect.v2.get_run_logger",
             return_value=Mock(spec=logging.Logger),
         )
         mocker.patch(
-            "cascade.prefect.v2.FlowRunContext",
+            "block.cascade.prefect.v2.FlowRunContext",
             return_value=Mock(spec=FlowRunContext),
         )
         mocker.patch(
-            "cascade.prefect.v2.TaskRunContext",
+            "block.cascade.prefect.v2.TaskRunContext",
             return_value=Mock(spec=TaskRunContext),
         )
-        mocker.patch("cascade.prefect.v2.get_current_deployment", return_value=None)
+        mocker.patch(
+            "block.cascade.prefect.v2.get_current_deployment", return_value=None
+        )
 
 
 def test_remote():

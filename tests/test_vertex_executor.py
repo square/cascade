@@ -24,11 +24,11 @@ def add(a: int, b: int) -> int:
 
 # status of job as global variables
 CANCELLED_STATUS = Status(job_state.JobState.JOB_STATE_CANCELLED, "test job cancelled")
-STAGE_METHOD = "cascade.executors.vertex.executor.Executor._stage"
-STATUS_METHOD = "cascade.executors.vertex.executor.VertexExecutor._get_status"
-START_METHOD = "cascade.executors.vertex.executor.VertexExecutor._start"
-VERTEX_PROPERTY = "cascade.executors.vertex.executor.VertexExecutor.vertex"
-STORAGE_PATH = "cascade.executors.vertex.executor.VertexExecutor.storage_path"
+STAGE_METHOD = "block.cascade.executors.vertex.executor.Executor._stage"
+STATUS_METHOD = "block.cascade.executors.vertex.executor.VertexExecutor._get_status"
+START_METHOD = "block.cascade.executors.vertex.executor.VertexExecutor._start"
+VERTEX_PROPERTY = "block.cascade.executors.vertex.executor.VertexExecutor.vertex"
+STORAGE_PATH = "block.cascade.executors.vertex.executor.VertexExecutor.storage_path"
 
 # Create a GCP resource
 machine_config = GcpMachineConfig("n1-standard-1")

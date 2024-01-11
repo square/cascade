@@ -6,7 +6,7 @@ import cloudpickle
 import gcsfs
 from hypertune import HyperTune
 
-from cascade.utils import parse_hyperparameters
+from block.cascade.utils import parse_hyperparameters
 
 INPUT_FILENAME = "function.pkl"
 DISTRIBUTED_JOB_FILENAME = "distributed_job.pkl"

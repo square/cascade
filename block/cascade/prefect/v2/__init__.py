@@ -3,8 +3,8 @@ from typing import Optional, Union
 
 import prefect
 
-from cascade.concurrency import run_async
-from cascade.utils import PREFECT_SUBVERSION
+from block.cascade.concurrency import run_async
+from block.cascade.utils import PREFECT_SUBVERSION
 
 if PREFECT_SUBVERSION <= 7:
     from prefect.orion.schemas.core import BlockDocument
