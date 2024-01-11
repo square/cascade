@@ -1,6 +1,6 @@
 from copy import copy
 
-from cascade.executors.vertex.resource import GcpEnvironmentConfig
+from block.cascade.executors.vertex.resource import GcpEnvironmentConfig
 from tests.resource_fixtures import (
     gcp_environment,
     gcp_resource,

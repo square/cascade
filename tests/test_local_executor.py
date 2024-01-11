@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 import cloudpickle
 from fsspec.implementations.local import LocalFileSystem
 
-from cascade.executors import LocalExecutor
-from cascade.utils import wrapped_partial
+from block.cascade.executors import LocalExecutor
+from block.cascade.utils import wrapped_partial
 
 
 def addition(a: int, b: int) -> int:

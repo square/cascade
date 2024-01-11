@@ -4,9 +4,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from cascade import GcpEnvironmentConfig, GcpMachineConfig, GcpResource
-from cascade.remote import remote
-from cascade.utils import PREFECT_VERSION
+from block.cascade import GcpEnvironmentConfig, GcpMachineConfig, GcpResource
+from block.cascade.remote import remote
+from block.cascade.utils import PREFECT_VERSION
 
 if PREFECT_VERSION == 2:
     from prefect.context import FlowRunContext, TaskRunContext

@@ -3,14 +3,14 @@ import os
 
 import pytest
 
-from cascade.executors.vertex import (
+from block.cascade.executors.vertex import (
     GcpAcceleratorConfig,
     GcpEnvironmentConfig,
     GcpMachineConfig,
     GcpResource,
 )
-from cascade.executors.vertex.distributed.torch_job import TorchJob
-from cascade.remote import remote
+from block.cascade.executors.vertex.distributed.torch_job import TorchJob
+from block.cascade.remote import remote
 
 torch = pytest.importorskip("torch")
 

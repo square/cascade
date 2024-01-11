@@ -6,14 +6,14 @@ import cloudpickle
 from fsspec.implementations.local import LocalFileSystem
 from google.cloud.aiplatform.compat.types import job_state_v1 as job_state
 
-from cascade import GcpMachineConfig, GcpResource
-from cascade.executors.vertex.executor import (
+from block.cascade import GcpMachineConfig, GcpResource
+from block.cascade.executors.vertex.executor import (
     Status,
     VertexCancelledError,
     VertexExecutor,
 )
-from cascade.executors.vertex.job import VertexJob
-from cascade.utils import wrapped_partial
+from block.cascade.executors.vertex.job import VertexJob
+from block.cascade.utils import wrapped_partial
 from tests.resource_fixtures import gcp_environment
 
 
