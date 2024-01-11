@@ -6,8 +6,8 @@ from enum import Enum
 from google.cloud import monitoring_v3
 from google.cloud.monitoring_v3 import types as monitoring_types
 
-from cascade.executors.vertex.resource import GcpResource
-from cascade.prefect import get_prefect_logger
+from block.cascade.executors.vertex.resource import GcpResource
+from block.cascade.prefect import get_prefect_logger
 
 SERVICE = "aiplatform.googleapis.com"
 RESOURCE_CATEGORY = "custom_model_training"

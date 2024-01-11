@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from importlib.metadata import version
 from typing import Optional
 
-from cascade.executors.databricks.resource import (
+from block.cascade.executors.databricks.resource import (
     DatabricksAutoscaleConfig,
     DatabricksResource,
 )

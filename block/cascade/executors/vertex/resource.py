@@ -4,7 +4,9 @@ from typing import Iterable, Optional, Type, TypeVar
 from pydantic import validator
 from pydantic.dataclasses import dataclass
 
-from cascade.executors.vertex.distributed.distributed_job import DistributedJobBase
+from block.cascade.executors.vertex.distributed.distributed_job import (
+    DistributedJobBase,
+)
 
 T = TypeVar("T", bound="GcpEnvironmentConfig")
 
