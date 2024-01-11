@@ -59,7 +59,7 @@ def test_new_executor():
     assert result1 == result2
 
 
-@patch("cascade.executors.executor.uuid4", return_value="12345")
+@patch("block.cascade.executors.executor.uuid4", return_value="12345")
 def test_result(mock_uuid4):
     """
     Tests that a file containing a pickled function can be opened, the function run
