@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "block-cascade"
 packages = [
-    {include = "cascade"}
+    {include = "block_cascade"}
 ]
-version = "2.1.1"
+version = "2.2.0"
 description = "Library for model training in multi-cloud environment."
 readme = "README.md"
 authors = ["Block"]

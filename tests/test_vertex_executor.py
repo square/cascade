@@ -6,14 +6,14 @@ import cloudpickle
 from fsspec.implementations.local import LocalFileSystem
 from google.cloud.aiplatform.compat.types import job_state_v1 as job_state
 
-from cascade import GcpMachineConfig, GcpResource
-from cascade.executors.vertex.executor import (
+from block_cascade import GcpMachineConfig, GcpResource
+from block_cascade.executors.vertex.executor import (
     Status,
     VertexCancelledError,
     VertexExecutor,
 )
-from cascade.executors.vertex.job import VertexJob
-from cascade.utils import wrapped_partial
+from block_cascade.executors.vertex.job import VertexJob
+from block_cascade.utils import wrapped_partial
 from tests.resource_fixtures import gcp_environment
 
 
@@ -24,11 +24,11 @@ def add(a: int, b: int) -> int:
 
 # status of job as global variables
 CANCELLED_STATUS = Status(job_state.JobState.JOB_STATE_CANCELLED, "test job cancelled")
-STAGE_METHOD = "cascade.executors.vertex.executor.Executor._stage"
-STATUS_METHOD = "cascade.executors.vertex.executor.VertexExecutor._get_status"
-START_METHOD = "cascade.executors.vertex.executor.VertexExecutor._start"
-VERTEX_PROPERTY = "cascade.executors.vertex.executor.VertexExecutor.vertex"
-STORAGE_PATH = "cascade.executors.vertex.executor.VertexExecutor.storage_path"
+STAGE_METHOD = "block_cascade.executors.vertex.executor.Executor._stage"
+STATUS_METHOD = "block_cascade.executors.vertex.executor.VertexExecutor._get_status"
+START_METHOD = "block_cascade.executors.vertex.executor.VertexExecutor._start"
+VERTEX_PROPERTY = "block_cascade.executors.vertex.executor.VertexExecutor.vertex"
+STORAGE_PATH = "block_cascade.executors.vertex.executor.VertexExecutor.storage_path"
 
 # Create a GCP resource
 machine_config = GcpMachineConfig("n1-standard-1")

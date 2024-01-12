@@ -5,20 +5,20 @@ from typing import Callable, Optional, Union
 
 import requests
 
-from cascade import GcpResource
-from cascade.config import find_default_configuration
-from cascade.executors import DatabricksExecutor, LocalExecutor, VertexExecutor
-from cascade.executors.databricks.resource import DatabricksResource
-from cascade.executors.vertex import GcpEnvironmentConfig
-from cascade.executors.vertex.tune import Tune
-from cascade.gcp import VMMetadataServerClient
-from cascade.prefect import (
+from block_cascade import GcpResource
+from block_cascade.config import find_default_configuration
+from block_cascade.executors import DatabricksExecutor, LocalExecutor, VertexExecutor
+from block_cascade.executors.databricks.resource import DatabricksResource
+from block_cascade.executors.vertex import GcpEnvironmentConfig
+from block_cascade.executors.vertex.tune import Tune
+from block_cascade.gcp import VMMetadataServerClient
+from block_cascade.prefect import (
     PrefectEnvironmentClient,
     get_from_prefect_context,
     get_prefect_logger,
     is_prefect_cloud_deployment,
 )
-from cascade.utils import _infer_base_module, wrapped_partial
+from block_cascade.utils import _infer_base_module, wrapped_partial
 
 RESERVED_ARG_PREFIX = "remote_"
 

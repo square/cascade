@@ -1,7 +1,7 @@
 import pytest
 
-from cascade.executors.vertex.job import VertexJob
-from cascade.executors.vertex.tune import ParamDouble, ParamInteger, Tune
+from block_cascade.executors.vertex.job import VertexJob
+from block_cascade.executors.vertex.tune import ParamDouble, ParamInteger, Tune
 from tests.resource_fixtures import gcp_resource, GCP_PROJECT
 
 CONTAINER_SPEC = {

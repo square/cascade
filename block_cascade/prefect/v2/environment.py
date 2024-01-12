@@ -2,9 +2,9 @@ from typing import Optional
 
 from prefect.context import FlowRunContext
 
-from cascade.concurrency import run_async
-from cascade.gcp import VertexAIEnvironmentInfoProvider
-from cascade.utils import PREFECT_SUBVERSION
+from block_cascade.concurrency import run_async
+from block_cascade.gcp import VertexAIEnvironmentInfoProvider
+from block_cascade.utils import PREFECT_SUBVERSION
 
 if PREFECT_SUBVERSION <= 7:
     from prefect.orion.schemas.core import BlockDocument
@@ -13,7 +13,7 @@ else:
 
 from prefect.client.schemas.responses import DeploymentResponse
 
-from cascade.prefect.v2 import _fetch_block, _fetch_deployment
+from block_cascade.prefect.v2 import _fetch_block, _fetch_deployment
 
 
 class PrefectEnvironmentClient(VertexAIEnvironmentInfoProvider):

@@ -1,4 +1,4 @@
-from cascade.executors.vertex.resource import (
+from block_cascade.executors.vertex.resource import (
     GcpEnvironmentConfig,
     GcpMachineConfig,
     GcpResource,

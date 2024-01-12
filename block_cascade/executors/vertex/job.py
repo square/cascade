@@ -7,8 +7,8 @@ from typing import List, Mapping, Optional, Union
 
 from slugify import slugify
 
-from cascade.executors.vertex.resource import GcpMachineConfig, GcpResource
-from cascade.executors.vertex.tune import (
+from block_cascade.executors.vertex.resource import GcpMachineConfig, GcpResource
+from block_cascade.executors.vertex.tune import (
     ParamCategorical,
     ParamDiscrete,
     ParamDouble,
@@ -48,7 +48,7 @@ class VertexJob:
         The name of the job, used for logging and tracking
     resource: GcpResource
         The resource object describing the GCP environment and cluster configuration
-        see cascade.executors.vertex.resource for details
+        see block_cascade.executors.vertex.resource for details
     storage_path: str
         The path to the directory used to store the staged file and output
     tune: Optional[Tune] = None
@@ -177,7 +177,7 @@ class VertexJob:
         that container
         """
 
-        executor_module_path = "cascade.executors.vertex.run"
+        executor_module_path = "block_cascade.executors.vertex.run"
         distributed_job = "False"
         if self.resource.distributed_job is not None:
             distributed_job = "True"

@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 import cloudpickle
 from fsspec.implementations.local import LocalFileSystem
 
-from cascade.executors import LocalExecutor
-from cascade.utils import wrapped_partial
+from block_cascade.executors import LocalExecutor
+from block_cascade.utils import wrapped_partial
 
 
 def addition(a: int, b: int) -> int:
@@ -59,7 +59,7 @@ def test_new_executor():
     assert result1 == result2
 
 
-@patch("cascade.executors.executor.uuid4", return_value="12345")
+@patch("block_cascade.executors.executor.uuid4", return_value="12345")
 def test_result(mock_uuid4):
     """
     Tests that a file containing a pickled function can be opened, the function run

@@ -1,16 +1,16 @@
 from functools import partial
 from unittest.mock import patch
 
-from cascade import DatabricksResource
-from cascade.executors import DatabricksExecutor
-from cascade.executors.databricks.job import DatabricksJob
-from cascade.utils import wrapped_partial
+from block_cascade import DatabricksResource
+from block_cascade.executors import DatabricksExecutor
+from block_cascade.executors.databricks.job import DatabricksJob
+from block_cascade.utils import wrapped_partial
 
 databricks_resource = DatabricksResource()
 
 # Mocks paths
 MOCK_CLUSTER_POLICY = (
-    "cascade.executors.DatabricksExecutor.get_cluster_policy_id_from_policy_name"
+    "block_cascade.executors.DatabricksExecutor.get_cluster_policy_id_from_policy_name"
 )
 MOCK__RUN = "cascade.executors.DatabricksExecutor._run"
 MOCK_FILESYSTEM = "cascade.executors.DatabricksExecutor.fs"
