@@ -4,9 +4,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from block.cascade import GcpEnvironmentConfig, GcpMachineConfig, GcpResource
-from block.cascade.remote import remote
-from block.cascade.utils import PREFECT_VERSION
+from block_cascade import GcpEnvironmentConfig, GcpMachineConfig, GcpResource
+from block_cascade.remote import remote
+from block_cascade.utils import PREFECT_VERSION
 
 if PREFECT_VERSION == 2:
     from prefect.context import FlowRunContext, TaskRunContext
@@ -18,19 +18,19 @@ GCP_PROJECT = "test-project"
 def patch_prefect_apis(mocker):
     if PREFECT_VERSION == 2:
         mocker.patch(
-            "block.cascade.prefect.v2.get_run_logger",
+            "block_cascade.prefect.v2.get_run_logger",
             return_value=Mock(spec=logging.Logger),
         )
         mocker.patch(
-            "block.cascade.prefect.v2.FlowRunContext",
+            "block_cascade.prefect.v2.FlowRunContext",
             return_value=Mock(spec=FlowRunContext),
         )
         mocker.patch(
-            "block.cascade.prefect.v2.TaskRunContext",
+            "block_cascade.prefect.v2.TaskRunContext",
             return_value=Mock(spec=TaskRunContext),
         )
         mocker.patch(
-            "block.cascade.prefect.v2.get_current_deployment", return_value=None
+            "block_cascade.prefect.v2.get_current_deployment", return_value=None
         )
 
 

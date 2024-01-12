@@ -1,4 +1,4 @@
-from block.cascade.utils import PREFECT_VERSION
+from block_cascade.utils import PREFECT_VERSION
 
 if PREFECT_VERSION == 1:
     from .v1 import (

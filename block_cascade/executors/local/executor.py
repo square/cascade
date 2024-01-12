@@ -4,7 +4,7 @@ from typing import Callable
 
 from fsspec.implementations.local import LocalFileSystem
 
-from block.cascade.executors.executor import Executor
+from block_cascade.executors.executor import Executor
 
 
 class LocalExecutor(Executor):

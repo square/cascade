@@ -11,17 +11,17 @@ import gcsfs
 from google.cloud import aiplatform
 from google.cloud.aiplatform.compat.types import job_state_v1 as job_state
 
-from block.cascade.concurrency import run_async
-from block.cascade.executors.executor import Executor
-from block.cascade.executors.vertex.distributed.distributed_job import DaskJob
-from block.cascade.executors.vertex.job import VertexJob
-from block.cascade.executors.vertex.resource import GcpResource
-from block.cascade.executors.vertex.tune import Tune, TuneResult
-from block.cascade.gcp.monitoring import log_quotas_for_resource
-from block.cascade.utils import PREFECT_VERSION, maybe_convert
+from block_cascade.concurrency import run_async
+from block_cascade.executors.executor import Executor
+from block_cascade.executors.vertex.distributed.distributed_job import DaskJob
+from block_cascade.executors.vertex.job import VertexJob
+from block_cascade.executors.vertex.resource import GcpResource
+from block_cascade.executors.vertex.tune import Tune, TuneResult
+from block_cascade.gcp.monitoring import log_quotas_for_resource
+from block_cascade.utils import PREFECT_VERSION, maybe_convert
 
 if PREFECT_VERSION == 2:
-    from block.cascade.prefect.v2 import get_current_deployment, get_storage_block
+    from block_cascade.prefect.v2 import get_current_deployment, get_storage_block
 else:
     get_storage_block = None
     get_current_deployment = None

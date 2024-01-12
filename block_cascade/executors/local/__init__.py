@@ -1,1 +1,1 @@
-from block.cascade.executors.local.executor import LocalExecutor  # noqa: F401
+from block_cascade.executors.local.executor import LocalExecutor  # noqa: F401

@@ -1,7 +1,7 @@
 from types import ModuleType
 from typing import Callable, Iterable, Optional
 
-from block.cascade.executors.executor import Executor
+from block_cascade.executors.executor import Executor
 
 try:
     import cloudpickle
@@ -21,10 +21,10 @@ from databricks_cli.cluster_policies.api import ClusterPolicyApi
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 
-from block.cascade.executors.databricks.resource import DatabricksSecret
-from block.cascade.executors.databricks.job import DatabricksJob
-from block.cascade.executors.databricks.resource import DatabricksResource
-from block.cascade.prefect import get_prefect_logger
+from block_cascade.executors.databricks.resource import DatabricksSecret
+from block_cascade.executors.databricks.job import DatabricksJob
+from block_cascade.executors.databricks.resource import DatabricksResource
+from block_cascade.prefect import get_prefect_logger
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 9:
     from importlib.resources import files
@@ -270,7 +270,7 @@ class DatabricksExecutor(Executor):
         to s3
         """
         run_script = (
-            files("block.cascade.executors.databricks")
+            files("block_cascade.executors.databricks")
             .joinpath("run.py")
             .resolve()
             .as_posix()
@@ -280,7 +280,7 @@ class DatabricksExecutor(Executor):
     def _stage(self):
         """
         Overwrite the base _stage method to additionally stage
-        block.cascade.executors.databricks.run.py and register pickle by value dependencies
+        block_cascade.executors.databricks.run.py and register pickle by value dependencies
         and then unregister them
         """
         self._upload_run_script()

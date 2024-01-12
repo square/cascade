@@ -6,10 +6,10 @@ from subprocess import check_call
 import sys
 from typing import List
 
-from block.cascade.executors.vertex.distributed.distributed_job import (
+from block_cascade.executors.vertex.distributed.distributed_job import (
     DistributedJobBase,
 )
-from block.cascade.utils import INPUT_FILENAME, OUTPUT_FILENAME
+from block_cascade.utils import INPUT_FILENAME, OUTPUT_FILENAME
 
 MASTER_PORT = "3333"  # Hardcode MASTER_PORT for Vertex AI proxy compatibility
 RDZV_ID = "123456"  # Can be any random string
@@ -59,7 +59,7 @@ class TorchJob(DistributedJobBase):
             $JOB_INPUT
         """  # noqa: E501
         torchrun_target_module_path = (
-            "block.cascade.executors.vertex.distributed.torchrun_target"
+            "block_cascade.executors.vertex.distributed.torchrun_target"
         )
 
         cluster_spec = json.loads(

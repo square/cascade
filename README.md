@@ -17,8 +17,8 @@ pip install block-cascade
 ### Example Usage in a Prefect flow
 
 ```python
-from block.cascade import remote
-from block.cascade import GcpEnvironmentConfig, GcpMachineConfig, GcpResource
+from block_cascade import remote
+from block_cascade import GcpEnvironmentConfig, GcpMachineConfig, GcpResource
 
 machine_config = GcpMachineConfig("n2-standard-4", 1)
 environment_config = GcpEnvironmentConfig(

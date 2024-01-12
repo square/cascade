@@ -9,8 +9,8 @@ try:
 except ImportError:
     from yaml import SafeLoader
 
-from block.cascade.executors.databricks.resource import DatabricksResource
-from block.cascade.executors.vertex.resource import (
+from block_cascade.executors.databricks.resource import DatabricksResource
+from block_cascade.executors.vertex.resource import (
     GcpResource,
 )
 

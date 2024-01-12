@@ -1,12 +1,12 @@
 from pyfakefs.fake_filesystem import FakeFilesystem
 import pytest
 
-from block.cascade.config import find_default_configuration
-from block.cascade.executors.databricks.resource import (
+from block_cascade.config import find_default_configuration
+from block_cascade.executors.databricks.resource import (
     DatabricksAutoscaleConfig,
     DatabricksResource,
 )
-from block.cascade.executors.vertex.resource import (
+from block_cascade.executors.vertex.resource import (
     GcpEnvironmentConfig,
     GcpMachineConfig,
     GcpResource,

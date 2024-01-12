@@ -29,7 +29,7 @@ class Executor(abc.ABC):
                  * this function must be picklable
                  * expect no arguments
                  * have a __name__ attribute
-            use block.cascade.utils.wrapped_partial to prepare a function for execution
+            use block_cascade.utils.wrapped_partial to prepare a function for execution
         """
         self.func = func
         self._fs = LocalFileSystem(auto_mkdir=True)

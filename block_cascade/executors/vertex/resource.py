@@ -4,7 +4,7 @@ from typing import Iterable, Optional, Type, TypeVar
 from pydantic import validator
 from pydantic.dataclasses import dataclass
 
-from block.cascade.executors.vertex.distributed.distributed_job import (
+from block_cascade.executors.vertex.distributed.distributed_job import (
     DistributedJobBase,
 )
 
