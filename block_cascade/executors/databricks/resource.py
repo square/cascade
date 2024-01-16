@@ -1,3 +1,4 @@
+import os
 from typing import List, Optional, Union
 
 from pydantic.dataclasses import Field, dataclass
@@ -110,7 +111,7 @@ class DatabricksResource:
     existing_cluster_id: Optional[str] = None
     group_name: Optional[str] = None
     secret: Optional[DatabricksSecret] = None
-    environment: Optional[str] = "production"
+    environment: Optional[str] = "prod"
     storage_location: Optional[str] = None
     s3_credentials: Optional[dict] = None
     cloud_pickle_by_value: Optional[List[str]] = Field(default_factory=list)
@@ -119,5 +120,7 @@ class DatabricksResource:
     python_libraries: Optional[List[str]] = None
 
     def __post_init__(self):
+        if self.group_name is None:
+            self.group_name = os.environ.get("DATABRICKS_GROUP", "default-group")
         if self.storage_location is None:
             self.storage_location = f"s3://lakehouse-data-{self.environment}/{self.group_name}/{self.environment}/cascade/"
