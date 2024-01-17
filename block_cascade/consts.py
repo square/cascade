@@ -1,0 +1,1 @@
+SERVICE = "aiplatform.googleapis.com"

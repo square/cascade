@@ -49,6 +49,12 @@ class GcpMachineConfig:
         https://cloud.google.com/compute/docs/machine-resource#recommendations_for_machine_types
     count: int = 1
         The number of machines of to provision in this node pool.
+    min_replica_count: Optional[int] = None
+        The minimum number of replicas to provision for this node pool. Only relevant for creating
+        persistent resources
+    max_replica_count: Optional[int] = None
+        The maximum number of replicas to provision for this node pool. Only relevant for creating
+        persistent resources
     accelerator: Optional[GcpAcceleratorConfig] = None
         Description of a GPU accelerator to attach to the machine.
         See https://cloud.google.com/vertex-ai/docs/training/configure-compute#accelerators
@@ -60,6 +66,8 @@ class GcpMachineConfig:
 
     type: str = "n2-standard-4"
     count: int = 1
+    min_replica_count: Optional[int] = None
+    max_replica_count: Optional[int] = None
     accelerator: Optional[GcpAcceleratorConfig] = None
     disk_size_gb: Optional[int] = None
     nfs_mounts: Optional[Iterable[NfsMountConfig]] = None
@@ -141,6 +149,7 @@ class GcpResource:
     envrionment: Optional[GCPEnvironmentConfig] = None
         The GCP environment in which to run the job. If none, the environment will be
         inferred from the current Prefect context.
+    persistent_resource_id: Optional[str] = None
 
     Set accelerators for GPU training by passing a `GcpAcceleratorConfig`
     to the chief or worker machine config object.
@@ -150,3 +159,4 @@ class GcpResource:
     workers: GcpMachineConfig = None
     environment: Optional[GcpEnvironmentConfig] = None
     distributed_job: Optional[DistributedJobBase] = None
+    peristent_resource_id: Optional[str] = None
