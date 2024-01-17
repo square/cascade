@@ -123,4 +123,7 @@ class DatabricksResource:
         if self.group_name is None:
             self.group_name = os.environ.get("DATABRICKS_GROUP", "default-group")
         if self.storage_location is None:
-            self.storage_location = f"s3://lakehouse-data-{self.environment}/{self.group_name}/{self.environment}/cascade/"
+            if self.environment == 'prod':
+                self.storage_location = f"s3://lakehouse-data-production/{self.group_name}/cascade/"
+            else:
+                self.storage_location = f"s3://lakehouse-data-staging/{self.group_name}/{self.environment}/cascade/"
