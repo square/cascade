@@ -159,4 +159,4 @@ class GcpResource:
     workers: GcpMachineConfig = None
     environment: Optional[GcpEnvironmentConfig] = None
     distributed_job: Optional[DistributedJobBase] = None
-    peristent_resource_id: Optional[str] = None
+    persistent_resource_id: Optional[str] = None

@@ -118,7 +118,10 @@ class VertexJob:
         if environment.network is not None:
             job_spec["network"] = environment.network
 
-        if environment.service_account is not None:
+        if (
+            environment.service_account is not None
+            and self.resource.persistent_resource_id is None
+        ):
             job_spec["service_account"] = environment.service_account
 
         if self.dashboard is True:
@@ -126,6 +129,9 @@ class VertexJob:
 
         if self.web_console is True:
             job_spec["enable_web_access"] = True
+
+        if self.resource.persistent_resource_id is not None:
+            job_spec["persistent_resource_id"] = self.resource.persistent_resource_id
 
         return job_spec
 
