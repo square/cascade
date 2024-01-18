@@ -76,3 +76,13 @@ gcloud auth login --update-adc
 No additional configuration is required in your application's code to use this token.
 
 However, for authenticating to Databricks and AWS you will need to provide a token and secret key respectively. These can be passed directly to the `DatabricksResource` object or set as environment variables. The following example shows how to provide these values in the configuration file.
+
+## For Developers
+
+### Using hermit for managing Python
+When developing cascade, you can optionally use [hermit](https://cashapp.github.io/hermit/usage/get-started/) to manage the Python executable used by cascade. Together with using poetry to manage dependencies, this will ensure that your development environment is identical to other contributors. Follow the linked instructions for installing hermit and then you can create a virtualenv with Python@3.9 by running:
+
+`. ./bin/activate-hermit`
+
+Then, install the dependencies with poetry:
+`poetry install`
