@@ -9,7 +9,7 @@ from typing import Callable, Mapping, Optional, Union
 import cloudpickle
 import gcsfs
 from google.cloud import aiplatform_v1beta1 as aiplatform
-from google.cloud.aiplatform.compat.types import job_state_v1 as job_state
+from google.cloud.aiplatform_v1beta1.types import job_state
 
 from block_cascade.concurrency import run_async
 from block_cascade.executors.executor import Executor
@@ -238,6 +238,7 @@ class VertexExecutor(Executor):
             response = self.vertex.get_hyperparameter_tuning_job(name=name)
         else:
             response = self.vertex.get_custom_job(name=name)
+            self._logger.info(f"response from job check: {response.state}")
         return Status(response.state, response.error)
 
     def _run(self):

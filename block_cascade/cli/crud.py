@@ -204,3 +204,51 @@ def delete_persistent_resource(
     except Exception as e:
         print(e)
     return response
+
+
+@click.command()
+@click.option(
+    "--id",
+    "-i",
+    required=True,
+    help="ID of the persistent resource to describe.",
+)
+@click.option(
+    "--project",
+    "-p",
+    help="GCP project ID. Inferred from gcloud config if not provided.",
+)
+@click.option(
+    "--region",
+    "-r",
+    help="GCP region. Inferred from gcloud config if not provided.",
+)
+def list_active_jobs(id: str, project: str = None, region: str = None):
+  client_options = {"api_endpoint": get_endpoint_str(region)}
+  client = aiplatform.JobServiceClient(client_options = client_options)
+
+  request = aiplatform.ListCustomJobsRequest(
+    parent=f"projects/{project}/locations/{region}",
+    filter='(state!="JOB_STATE_SUCCEEDED" AND state!="JOB_STATE_FAILED" AND state!="JOB_STATE_CANCELLED") AND labels.presistent_resource_job=true',
+  )
+
+  page_result = client.list_custom_jobs(request=request)
+  persistentResourceJobs = {"customJobs":[]}
+  jobs_json = json.loads(json_format.MessageToJson(page_result._pb))
+
+  try:
+    customJobs = jobs_json["customJobs"]
+    persistentResourceJobs = {"customJobs":[]}
+  except:
+    customJobs = {}
+
+  for customJob in customJobs:
+    try:
+      persistentResourceId = customJob['jobSpec']['persistentResourceId']
+    except:
+      continue
+    if id == persistentResourceId:
+      print("-- This job is using persistent resources -- ", customJob["name"])
+      persistentResourceJobs["customJobs"] += [customJob]
+
+  return persistentResourceJobs

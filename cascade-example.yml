@@ -8,4 +8,4 @@ cmachak-pr-test2:
         service_account: "ds-cash-production@ds-cash-production.iam.gserviceaccount.com"
         region: "us-west1"
         image: "us.gcr.io/ds-cash-production/cascade/block-cascade-test"
-    persistent_resource_id: cmachak-pr-test1
+    persistent_resource_id: cmachak-pr-test2
