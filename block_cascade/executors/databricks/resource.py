@@ -41,6 +41,9 @@ class DatabricksResource:
 
     Parameters
     ----------
+    storage_location: str
+       Path to the directory on s3 where files will be staged and output written
+       cascade needs to have access to this bucket from the execution environment
     worker_count: Optional[Union[int, DatabricksAutoscaleConfig]]
         If an integer is supplied, specifies the of workers in Databricks cluster.
         If a `DatabricksAutoscaleConfig` is supplied, specifies the autoscale
@@ -79,10 +82,6 @@ class DatabricksResource:
     secret : Optional[DatabricksSecret]
         Token and hostname used to authenticate
         Required to run tasks on Databricks
-    s3_storage_location: Optional[str]
-       Path to the directory on s3 where files will be staged and output written
-       You need to have access to this bucket from the execution environment
-       Default is f"s3://lakehouse-data-{environment}/{group_name}/{environment}/cascade/"
     s3_credentials: dict
         Credentials to access S3, will be used to initialize S3FileSystem by
         calling s3fs.S3FileSystem(**s3_credentials),
@@ -102,6 +101,7 @@ class DatabricksResource:
 
     """  # noqa: E501
 
+    storage_location: str = None
     worker_count: Optional[Union[int, DatabricksAutoscaleConfig]] = 1
     machine: Optional[str] = "i3.xlarge"
     spark_version: Optional[str] = "11.3.x-scala2.12"
@@ -112,7 +112,6 @@ class DatabricksResource:
     group_name: Optional[str] = None
     secret: Optional[DatabricksSecret] = None
     environment: Optional[str] = "prod"
-    storage_location: Optional[str] = None
     s3_credentials: Optional[dict] = None
     cloud_pickle_by_value: Optional[List[str]] = Field(default_factory=list)
     cloud_pickle_infer_base_module: Optional[bool] = True
@@ -122,5 +121,3 @@ class DatabricksResource:
     def __post_init__(self):
         if self.group_name is None:
             self.group_name = os.environ.get("DATABRICKS_GROUP", "default-group")
-        if self.storage_location is None:
-            self.storage_location = f"s3://lakehouse-data-{self.environment}/{self.group_name}/{self.environment}/cascade/"
