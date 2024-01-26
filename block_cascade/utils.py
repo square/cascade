@@ -39,10 +39,10 @@ def get_gcloud_config() -> dict:
         if result.returncode == 0:
             config = json.loads(result.stdout)
         else:
-            print("Error listing gcloud configuration:", result.stderr)
+            logger.error("Error listing gcloud configuration:", result.stderr)
             config = dict()
     except Exception as e:
-        print("Error listing gcloud configuration:", e)
+        logger.error("Error listing gcloud configuration:", e)
         config = dict()
 
     return config

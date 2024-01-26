@@ -96,13 +96,13 @@ def get_endpoint_str(region: str) -> str:
 
 @click.command()
 @click.option(
-    "--name",
-    "-n",
+    "--config-name",
+    "-c",
     required=True,
-    help="Name for the persistent resource.",
+    help="Name of the configuration block in cascade.yml to use.",
 )
-def create_persistent_resource(name: str):
-    resource = find_default_configuration()[name]
+def create_persistent_resource(config_name: str):
+    resource = find_default_configuration()[config_name]
     persistent_resource = get_persistent_resource_payload(resource)
 
     # CreatePersistentResoure SDK
@@ -115,15 +115,20 @@ def create_persistent_resource(name: str):
     try:
         operation = client.create_persistent_resource(
             parent=parent,
-            persistent_resource_id=name,
+            persistent_resource_id=resource.persistent_resource_id,
             persistent_resource=persistent_resource,
+        )
+        click.echo(
+            """
+            Attempting to create Persistent Resource... 
+            This may take several minutes and will continue if you close this terminal.
+            """
         )
         response = operation.result()
         response = json.loads(json_format.MessageToJson(response._pb))
+        click.echo(f'Persistent resource {response["name"]} created successfully.')
     except Exception as e:
-        print(e)
-        response = {}
-    return response
+        click.echo(e)
 
 
 @click.command()
@@ -149,16 +154,15 @@ def list_persistent_resources(region: str = None, project: str = None):
     client_options = {"api_endpoint": f"{region}-{SERVICE}"}
     client = aiplatform.PersistentResourceServiceClient(client_options=client_options)
 
+    click.echo("Querying the list of Persistent Resources...")
     request = aiplatform.ListPersistentResourcesRequest(
         parent=f"projects/{project}/locations/{region}"
     )
 
     response = client.list_persistent_resources(request=request)
     response_json = json.loads(json_format.MessageToJson(response._pb))
-    print(
-        "Listing Persistent Resources:\n",
-        json.dumps(response_json, indent=2),
-    )
+    click.echo("Listing Persistent Resources:\n")
+    click.echo(json.dumps(response_json, indent=2))
 
 
 @click.command()
@@ -195,15 +199,13 @@ def delete_persistent_resource(
     request = aiplatform.DeletePersistentResourceRequest(
         name=f"projects/{project}/locations/{region}/persistentResources/{persistent_resource_id}"
     )
-
-    response = {}
     try:
         operation = client.delete_persistent_resource(request=request)
-        print("Waiting for operation to complete...")
-        response = operation.result()
+        click.echo("Waiting for operation to complete...")
+        _ = operation.result()
+        click.echo("Persistent resource deleted successfully.")
     except Exception as e:
-        print(e)
-    return response
+        click.echo(e)
 
 
 @click.command()
@@ -224,31 +226,30 @@ def delete_persistent_resource(
     help="GCP region. Inferred from gcloud config if not provided.",
 )
 def list_active_jobs(id: str, project: str = None, region: str = None):
-  client_options = {"api_endpoint": get_endpoint_str(region)}
-  client = aiplatform.JobServiceClient(client_options = client_options)
+    client_options = {"api_endpoint": get_endpoint_str(region)}
+    client = aiplatform.JobServiceClient(client_options=client_options)
 
-  request = aiplatform.ListCustomJobsRequest(
-    parent=f"projects/{project}/locations/{region}",
-    filter='(state!="JOB_STATE_SUCCEEDED" AND state!="JOB_STATE_FAILED" AND state!="JOB_STATE_CANCELLED") AND labels.presistent_resource_job=true',
-  )
+    request = aiplatform.ListCustomJobsRequest(
+        parent=f"projects/{project}/locations/{region}",
+        filter='(state!="JOB_STATE_SUCCEEDED" AND state!="JOB_STATE_FAILED" AND state!="JOB_STATE_CANCELLED") AND labels.presistent_resource_job=true',
+    )
 
-  page_result = client.list_custom_jobs(request=request)
-  persistentResourceJobs = {"customJobs":[]}
-  jobs_json = json.loads(json_format.MessageToJson(page_result._pb))
+    page_result = client.list_custom_jobs(request=request)
+    persistentResourceJobs = {"customJobs": []}
+    jobs_json = json.loads(json_format.MessageToJson(page_result._pb))
 
-  try:
-    customJobs = jobs_json["customJobs"]
-    persistentResourceJobs = {"customJobs":[]}
-  except:
-    customJobs = {}
-
-  for customJob in customJobs:
     try:
-      persistentResourceId = customJob['jobSpec']['persistentResourceId']
+        customJobs = jobs_json["customJobs"]
+        persistentResourceJobs = {"customJobs": []}
     except:
-      continue
-    if id == persistentResourceId:
-      print("-- This job is using persistent resources -- ", customJob["name"])
-      persistentResourceJobs["customJobs"] += [customJob]
+        customJobs = {}
 
-  return persistentResourceJobs
+    for customJob in customJobs:
+        try:
+            persistentResourceId = customJob["jobSpec"]["persistentResourceId"]
+        except:
+            continue
+        if id == persistentResourceId:
+            persistentResourceJobs["customJobs"] += [customJob]
+
+    click.echo(persistentResourceJobs)

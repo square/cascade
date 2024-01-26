@@ -1,6 +1,7 @@
 from block_cascade import remote
 
-@remote(job_name="cmachak-pr-test2")
+
+@remote(config_name="hello-world", job_name="cmachak-hello-world")
 def test_job():
     print("Hello World")
 
