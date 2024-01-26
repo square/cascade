@@ -75,8 +75,8 @@ def get_persistent_resource_payload(resource: GcpResource) -> dict:
         RESOURCE_POOLS = []
 
     PERSISTENT_RESOURCE = {
-        "display_name": "Preview Persistent Resource",
-        "resource_pools": RESOURCE_POOLS,  # You may remove below pools or add more pools if you want.
+        "display_name": resource.persistent_resource_id,
+        "resource_pools": RESOURCE_POOLS,
     }
 
     return PERSISTENT_RESOURCE
@@ -102,6 +102,10 @@ def get_endpoint_str(region: str) -> str:
     help="Name of the configuration block in cascade.yml to use.",
 )
 def create_persistent_resource(config_name: str):
+    """
+    Create a persistent resource from a configuration block in cascade.yaml.
+    Configuration block will be keyed on the config-name argument.
+    """
     resource = find_default_configuration()[config_name]
     persistent_resource = get_persistent_resource_payload(resource)
 

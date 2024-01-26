@@ -79,20 +79,20 @@ You can create a persistent resource using the cascade CLI and suppling a cascad
 ```yaml
 
 ```yaml
-default:
-    GcpResource:
-        environment:
-            project: example-project
-            service_account: example-project@vertex.iam.gserviceaccount.com
-            region: us-central-1
-        chief:
-            type: n1-standard-4
-        persistent_resource_id: my-persistent-resource
+persistent-resource:
+  type: GcpResource
+  environment:
+      project: ds-cash-production
+      service_account: ds-cash-production@ds-cash-production.iam.gserviceaccount.com
+      region: us-west1
+  chief:
+      type: n1-standard-4
+  persistent_resource_id: my-persistent-resource
 ```
 
 #### create the persistent resource
 ```bash
-cascade create-persistent-resource --config default
+cascade create-persistent-resource --config persistent-resource
 ```
 
 #### Don't forget to delete the persistent resource when you are done with it
