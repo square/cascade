@@ -19,6 +19,7 @@ MOCK_STORAGE_PATH = "cascade.executors.DatabricksExecutor.storage_path"
 DATABRICKS_GROUP = "cascade"
 
 databricks_resource = DatabricksResource(
+    storage_location="s3://test-bucket/cascade",
     group_name=DATABRICKS_GROUP,
 )
 
