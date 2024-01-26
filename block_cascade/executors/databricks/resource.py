@@ -41,7 +41,7 @@ class DatabricksResource:
 
     Parameters
     ----------
-    s3_storage_location: str
+    storage_location: str
        Path to the directory on s3 where files will be staged and output written
        cascade needs to have access to this bucket from the execution environment
     worker_count: Optional[Union[int, DatabricksAutoscaleConfig]]
