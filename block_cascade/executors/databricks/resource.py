@@ -101,7 +101,7 @@ class DatabricksResource:
 
     """  # noqa: E501
 
-    storage_location: Optional[str] = None
+    storage_location: str = None
     worker_count: Optional[Union[int, DatabricksAutoscaleConfig]] = 1
     machine: Optional[str] = "i3.xlarge"
     spark_version: Optional[str] = "11.3.x-scala2.12"
