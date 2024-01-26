@@ -82,9 +82,10 @@ You can create a persistent resource using the cascade CLI and suppling a cascad
 persistent-resource:
   type: GcpResource
   environment:
-      project: ds-cash-production
-      service_account: ds-cash-production@ds-cash-production.iam.gserviceaccount.com
+      project: example-project
+      service_account: example-project@example-project.iam.gserviceaccount.com
       region: us-west1
+      image: us.gcr.io/example-project/cascade/block-cascade
   chief:
       type: n1-standard-4
   persistent_resource_id: my-persistent-resource
@@ -93,6 +94,20 @@ persistent-resource:
 #### create the persistent resource
 ```bash
 cascade create-persistent-resource --config persistent-resource
+```
+
+#### You can then submit cascade tasks to this persistent resource
+```python
+from block_cascade import remote
+
+
+@remote(config_name="persistent-resource", job_name="hello-world")
+def test_job():
+    print("Hello World")
+
+
+test_job()
+
 ```
 
 #### Don't forget to delete the persistent resource when you are done with it
