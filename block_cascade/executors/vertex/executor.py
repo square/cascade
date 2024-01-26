@@ -238,7 +238,6 @@ class VertexExecutor(Executor):
             response = self.vertex.get_hyperparameter_tuning_job(name=name)
         else:
             response = self.vertex.get_custom_job(name=name)
-            self._logger.info(f"response from job check: {response.state}")
         return Status(response.state, response.error)
 
     def _run(self):
