@@ -1,3 +1,5 @@
+from typing import Optional
+
 import click
 import json
 from google.cloud import aiplatform_v1beta1 as aiplatform
@@ -146,7 +148,9 @@ def create_persistent_resource(config_name: str):
     "-r",
     help="GCP region. Inferred from gcloud config if not provided.",
 )
-def list_persistent_resources(region: str = None, project: str = None):
+def list_persistent_resources(
+    region: Optional[str] = None, project: Optional[str] = None
+):
     # try to infer project and region from gcloud config
     if region is None or project is None:
         gcp_config = get_gcloud_config()
@@ -154,6 +158,16 @@ def list_persistent_resources(region: str = None, project: str = None):
             project = get_gcp_project(gcp_config)
         if region is None:
             region = get_gcp_region(gcp_config)
+        if project is None or project == "":
+            click.echo(
+                "Could not infer project from gcloud config. Please provide directly to the CLI."
+            )
+            return
+        if region is None or region == "":
+            click.echo(
+                "Could not infer region from gcloud config. Please provide directly to the CLI."
+            )
+            return
 
     client_options = {"api_endpoint": f"{region}-{SERVICE}"}
     client = aiplatform.PersistentResourceServiceClient(client_options=client_options)
@@ -187,15 +201,27 @@ def list_persistent_resources(region: str = None, project: str = None):
     help="GCP region. Inferred from gcloud config if not provided.",
 )
 def delete_persistent_resource(
-    persistent_resource_id: str, region: str = None, project: str = None
+    persistent_resource_id: str,
+    region: Optional[str] = None,
+    project: Optional[str] = None,
 ):
     # try to infer project and region from gcloud config
     if region is None or project is None:
         gcp_config = get_gcloud_config()
         if project is None:
             project = get_gcp_project(gcp_config)
+        if project is None or project == "":
+            click.echo(
+                "Could not infer project from gcloud config. Please provide directly to the CLI."
+            )
+            return
         if region is None:
             region = get_gcp_region(gcp_config)
+        if region is None or region == "":
+            click.echo(
+                "Could not infer region from gcloud config. Please provide directly to the CLI."
+            )
+            return
 
     client_options = {"api_endpoint": get_endpoint_str(region)}
     client = aiplatform.PersistentResourceServiceClient(client_options=client_options)
