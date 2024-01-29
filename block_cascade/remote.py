@@ -26,6 +26,7 @@ RESERVED_ARG_PREFIX = "remote_"
 def remote(
     func: Union[Callable, partial, None] = None,
     resource: Union[GcpResource, DatabricksResource] = None,
+    config_name: Optional[str] = None,
     job_name: Optional[str] = None,
     web_console_access: Optional[bool] = False,
     tune: Optional[Tune] = None,
@@ -62,6 +63,9 @@ def remote(
     resource: Union[GcpResource, DatabricksResource]
         A description of the remote resource (environment and cluster configuration)
         to run the function on
+    config_name: Optional[str]
+        The name of the configuration to use; must be a named block in cascade.yml
+        If not provided, the job_name will be used to key the configuration
     job_name: Optional[str]
         The display name for the job; if no name is passed (default) this will
         be inferred from the function name and environment
@@ -80,7 +84,10 @@ def remote(
 
     if not resource:
         resource_configurations = find_default_configuration() or {}
-        resource = resource_configurations.get(job_name)
+        if config_name:
+            resource = resource_configurations.get(config_name)
+        else:
+            resource = resource_configurations.get(job_name)
 
     remote_args = locals()
     # Support calling this with arguments before using as a decorator, e.g. this

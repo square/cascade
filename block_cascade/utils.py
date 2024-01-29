@@ -5,6 +5,8 @@ from inspect import signature
 import itertools
 import logging
 from typing import List
+import subprocess
+import json
 
 import prefect
 
@@ -22,6 +24,28 @@ PREFECT_VERSION, PREFECT_SUBVERSION = detect_prefect_version(0), detect_prefect_
 INPUT_FILENAME = "function.pkl"
 DISTRIBUTED_JOB_FILENAME = "distributed_job.pkl"
 OUTPUT_FILENAME = "output.pkl"
+
+
+def get_gcloud_config() -> dict:
+    """Get the current gcloud config if available in a user's environment."""
+    try:
+        # Run the gcloud config list command and parse the output as JSON
+        result = subprocess.run(
+            ["gcloud", "config", "list", "--format", "json"],
+            capture_output=True,
+            text=True,
+        )
+        # Check if the command was executed successfully
+        if result.returncode == 0:
+            config = json.loads(result.stdout)
+        else:
+            logger.error("Error listing gcloud configuration:", result.stderr)
+            config = dict()
+    except Exception as e:
+        logger.error("Error listing gcloud configuration:", e)
+        config = dict()
+
+    return config
 
 
 def get_args(obj):

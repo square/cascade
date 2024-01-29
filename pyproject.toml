@@ -3,15 +3,10 @@ name = "block-cascade"
 packages = [
     {include = "block_cascade"}
 ]
-version = "2.3.1"
+version = "2.4.0"
 description = "Library for model training in multi-cloud environment."
 readme = "README.md"
 authors = ["Block"]
-
-[[source]]
-name = "pypi"
-url = "https://pypi.org/simple"
-verify_ssl = true
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
@@ -20,7 +15,7 @@ cloudpickle = "^2.0"
 databricks-cli = ">=0.17.7"
 gcsfs = ">=2023.6.0"
 google-auth = "^2.23.2"
-google-cloud-aiplatform = ">=1.22.1"
+google-cloud-aiplatform = "^1.39.0"
 google-cloud-monitoring = "^2.16.0"
 google-cloud-resource-manager = "^1.10.4"
 importlib_resources = {version="*", python="<3.9"}
@@ -39,6 +34,11 @@ pytest-mock = "^3.11.1"
 dask = {extras = ["distributed"], version = ">=2022"}
 pyfakefs = "<5.3"
 
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -48,3 +48,6 @@ log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+[tool.poetry.scripts]
+cascade = "block_cascade.cli:cli"

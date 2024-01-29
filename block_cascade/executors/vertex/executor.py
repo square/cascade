@@ -8,8 +8,8 @@ from typing import Callable, Mapping, Optional, Union
 
 import cloudpickle
 import gcsfs
-from google.cloud import aiplatform
-from google.cloud.aiplatform.compat.types import job_state_v1 as job_state
+from google.cloud import aiplatform_v1beta1 as aiplatform
+from google.cloud.aiplatform_v1beta1.types import job_state
 
 from block_cascade.concurrency import run_async
 from block_cascade.executors.executor import Executor
@@ -156,7 +156,7 @@ class VertexExecutor(Executor):
         """
         region = self.job.resource.environment.region
         client_options = {"api_endpoint": f"{region}-aiplatform.googleapis.com"}
-        return aiplatform.gapic.JobServiceClient(client_options=client_options)
+        return aiplatform.JobServiceClient(client_options=client_options)
 
     @property
     def display_name(self):
