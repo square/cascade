@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 import click
@@ -9,6 +10,8 @@ from block_cascade import GcpResource
 from block_cascade.config import find_default_configuration
 from block_cascade.consts import SERVICE
 from block_cascade.utils import get_gcloud_config
+
+logger = logging.getLogger(__name__)
 
 
 def get_gcp_project(config: dict) -> str:
@@ -24,64 +27,64 @@ def get_gcp_region(config: dict) -> str:
 def get_persistent_resource_payload(resource: GcpResource) -> dict:
     """Generate a persistent resource payload from a GcpResource."""
 
-    CPU_MACHINE_TYPE = resource.chief.type
-    CPU_REPLICA_COUNT = resource.chief.count
-    CPU_MIN_REPLICA_COUNT = resource.chief.min_replica_count or 0
-    CPU_MAX_REPLICA_COUNT = resource.chief.max_replica_count or 0
+    cpu_machine_type = resource.chief.type
+    cpu_replica_count = resource.chief.count
+    cpu_min_replica_count = resource.chief.min_replica_count or 0
+    cpu_max_replica_count = resource.chief.max_replica_count or 0
     if resource.chief.accelerator is not None:
-        GPU_MACHINE_TYPE = resource.chief.type
-        GPU_REPLICA_COUNT = resource.chief.count
-        GPU_ACCELERATOR_TYPE = resource.chief.accelerator.type
-        GPU_ACCELERATOR_COUNT = resource.chief.accelerator.count
+        gpu_machine_type = resource.chief.type
+        gpu_replica_count = resource.chief.count
+        gpu_accelerator_type = resource.chief.accelerator.type
+        gpu_accelerator_count = resource.chief.accelerator.count
     else:
-        GPU_MACHINE_TYPE = None
-        GPU_REPLICA_COUNT = 0
-        GPU_ACCELERATOR_TYPE = None
-        GPU_ACCELERATOR_COUNT = 0
+        gpu_machine_type = None
+        gpu_replica_count = 0
+        gpu_accelerator_type = None
+        gpu_accelerator_count = 0
 
     # This is consistent with the default disk spec of jobs.
-    DISK_SPEC = {"boot_disk_type": "pd-ssd", "boot_disk_size_gb": 100}
+    disk_spec = {"boot_disk_type": "pd-ssd", "boot_disk_size_gb": 100}
 
-    CPU_AUTOSCALING_SPEC = {
-        "min_replica_count": CPU_MIN_REPLICA_COUNT,
-        "max_replica_count": CPU_MAX_REPLICA_COUNT,
-    }
-
-    CPU_POOL = {
+    cpu_pool = {
         "machine_spec": {
-            "machine_type": CPU_MACHINE_TYPE,
+            "machine_type": cpu_machine_type,
         },
-        "replica_count": CPU_REPLICA_COUNT,
-        "disk_spec": DISK_SPEC,
+        "replica_count": cpu_replica_count,
+        "disk_spec": disk_spec,
     }
-    if CPU_MIN_REPLICA_COUNT > 0 or CPU_MAX_REPLICA_COUNT > 0:
-        CPU_POOL["autoscaling_spec"] = CPU_AUTOSCALING_SPEC
+    if cpu_min_replica_count > 0 or cpu_max_replica_count > 0:
+        cpu_pool["autoscaling_spec"] = {
+            "min_replica_count": cpu_min_replica_count,
+            "max_replica_count": cpu_max_replica_count,
+        }
 
-    GPU_POOL = {
+    gpu_pool = {
         "machine_spec": {
-            "machine_type": GPU_MACHINE_TYPE,
-            "accelerator_type": GPU_ACCELERATOR_TYPE,
-            "accelerator_count": GPU_ACCELERATOR_COUNT,
+            "machine_type": gpu_machine_type,
+            "accelerator_type": gpu_accelerator_type,
+            "accelerator_count": gpu_accelerator_count,
         },
-        "replica_count": GPU_REPLICA_COUNT,
-        "disk_spec": DISK_SPEC,
+        "replica_count": gpu_replica_count,
+        "disk_spec": disk_spec,
     }
 
-    if CPU_REPLICA_COUNT > 0 and GPU_REPLICA_COUNT > 0:
-        RESOURCE_POOLS = [CPU_POOL, GPU_POOL]
-    elif CPU_REPLICA_COUNT > 0:
-        RESOURCE_POOLS = [CPU_POOL]
-    elif GPU_REPLICA_COUNT > 0:
-        RESOURCE_POOLS = [GPU_POOL]
+    if cpu_replica_count > 0 and gpu_replica_count > 0:
+        RESOURCE_POOLS = [cpu_pool, gpu_pool]
+    elif cpu_replica_count > 0:
+        RESOURCE_POOLS = [cpu_pool]
+    elif gpu_replica_count > 0:
+        RESOURCE_POOLS = [gpu_pool]
     else:
-        RESOURCE_POOLS = []
+        logger.error(
+            "No CPU or GPU replicas specified, persistent resources can not be created."
+        )
 
-    PERSISTENT_RESOURCE = {
+    persistent_resource = {
         "display_name": resource.persistent_resource_id,
         "resource_pools": RESOURCE_POOLS,
     }
 
-    return PERSISTENT_RESOURCE
+    return persistent_resource
 
 
 def get_parent_str(resource: GcpResource) -> str:
@@ -255,7 +258,9 @@ def delete_persistent_resource(
     "-r",
     help="GCP region. Inferred from gcloud config if not provided.",
 )
-def list_active_jobs(id: str, project: str = None, region: str = None):
+def list_active_jobs(
+    id: str, project: Optional[str] = None, region: Optional[str] = None
+):
     client_options = {"api_endpoint": get_endpoint_str(region)}
     client = aiplatform.JobServiceClient(client_options=client_options)
 
