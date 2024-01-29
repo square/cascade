@@ -4,7 +4,7 @@ from unittest.mock import PropertyMock, patch
 
 import cloudpickle
 from fsspec.implementations.local import LocalFileSystem
-from google.cloud.aiplatform.compat.types import job_state_v1 as job_state
+from google.cloud.aiplatform_v1beta1.types import job_state
 
 from block_cascade import GcpMachineConfig, GcpResource
 from block_cascade.executors.vertex.executor import (
