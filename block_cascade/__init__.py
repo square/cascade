@@ -8,7 +8,7 @@ from block_cascade.executors.vertex.resource import (  # noqa: F401
     GcpMachineConfig,
     GcpResource,
 )
-from block_cascade.remote import remote  # noqa: F401
+from block_cascade.decorators import remote  # noqa: F401
 
 __all__ = [
     "DatabricksAutoscaleConfig",
