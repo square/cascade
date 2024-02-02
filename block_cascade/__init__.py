@@ -10,12 +10,12 @@ from block_cascade.executors.vertex.resource import (  # noqa: F401
 )
 from block_cascade.remote import remote  # noqa: F401
 
-all = [
-    DatabricksAutoscaleConfig,
-    DatabricksResource,
-    GcpAcceleratorConfig,
-    GcpEnvironmentConfig,
-    GcpMachineConfig,
-    GcpResource,
-    remote,
+__all__ = [
+    "DatabricksAutoscaleConfig",
+    "DatabricksResource",
+    "GcpAcceleratorConfig",
+    "GcpEnvironmentConfig",
+    "GcpMachineConfig",
+    "GcpResource",
+    "remote",
 ]
