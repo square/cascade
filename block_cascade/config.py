@@ -10,9 +10,7 @@ except ImportError:
     from yaml import SafeLoader
 
 from block_cascade.executors.databricks.resource import DatabricksResource
-from block_cascade.executors.vertex.resource import (
-    GcpResource,
-)
+from block_cascade.executors.vertex.resource import GcpResource
 
 logger = logging.getLogger(__name__)
 
