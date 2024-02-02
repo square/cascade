@@ -11,8 +11,7 @@ from block_cascade.executors.databricks.resource import DatabricksResource
 from block_cascade.executors.databricks.executor import DatabricksExecutor
 from block_cascade.executors.local.executor import LocalExecutor
 from block_cascade.executors.vertex.executor import VertexExecutor
-from block_cascade.executors.vertex.resource import GcpEnvironmentConfig
-from block_cascade.executors.vertex.resource import GcpResource
+from block_cascade.executors.vertex.resource import GcpEnvironmentConfig, GcpResource
 from block_cascade.executors.vertex.tune import Tune
 from block_cascade.prefect import (
     PrefectEnvironmentClient,
