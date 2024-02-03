@@ -10,7 +10,7 @@ from block_cascade.executors.vertex import (
     GcpResource,
 )
 from block_cascade.executors.vertex.distributed.torch_job import TorchJob
-from block_cascade.remote import remote
+from block_cascade import remote
 
 torch = pytest.importorskip("torch")
 
