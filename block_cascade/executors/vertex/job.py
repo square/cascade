@@ -1,6 +1,7 @@
 """
 Data model for running jobs on VertexAI
 """
+
 from dataclasses import asdict, dataclass
 import os
 from typing import List, Mapping, Optional, Union
@@ -118,10 +119,7 @@ class VertexJob:
         if environment.network is not None:
             job_spec["network"] = environment.network
 
-        if (
-            environment.service_account is not None
-            and self.resource.persistent_resource_id is None
-        ):
+        if environment.service_account is not None:
             job_spec["service_account"] = environment.service_account
 
         if self.dashboard is True:
