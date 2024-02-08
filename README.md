@@ -14,7 +14,7 @@ or
 pip install block-cascade
 ```
 
-### Example Usage in a Prefect flow
+### Example Usage
 
 ```python
 from block_cascade import remote
@@ -75,8 +75,6 @@ However, for authenticating to Databricks and AWS you will need to provide a tok
 Cascade supports creating persistent resources in GCP. These resources can be reused across multiple tasks and will persist until deleted manually by the user. This can be useful for debugging tasks that involve large images that take a long time to be loaded onto a node or for reserving scarce resources like A100 GPUs.
 
 You can create a persistent resource using the `cascade` CLI and suppling a `cascade.yml` with a configuration block that contains a `persistent_resource_id` field. This field will be used to identify the persistent resource when submitting tasks to it. It is recommended that you use the configuration file to define the resource as well as the tasks that will be submitted to it. This will ensure that the resource specified for your task is compatible with the shape of the persistent resource. 
-
-```yaml
 
 ```yaml
 persistent-resource:
