@@ -4,6 +4,7 @@ from typing import Optional
 import click
 import json
 from google.cloud import aiplatform_v1beta1 as aiplatform
+from google.cloud.aiplatform_v1beta1 import ServiceAccountSpec, ResourceRuntimeSpec
 from google.protobuf import json_format
 
 from block_cascade import GcpResource
@@ -26,6 +27,11 @@ def get_gcp_region(config: dict) -> str:
 
 def get_persistent_resource_payload(resource: GcpResource) -> dict:
     """Generate a persistent resource payload from a GcpResource."""
+
+    # service account spec
+    resource_runtime_spec = ResourceRuntimeSpec(
+        service_account_spec=ServiceAccountSpec(enable_custom_service_account=True)
+    )
 
     cpu_machine_type = resource.chief.type
     cpu_replica_count = resource.chief.count
@@ -82,6 +88,7 @@ def get_persistent_resource_payload(resource: GcpResource) -> dict:
     persistent_resource = {
         "display_name": resource.persistent_resource_id,
         "resource_pools": RESOURCE_POOLS,
+        "resource_runtime_spec": resource_runtime_spec,
     }
 
     return persistent_resource
