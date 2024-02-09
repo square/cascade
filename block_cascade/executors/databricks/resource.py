@@ -111,7 +111,6 @@ class DatabricksResource:
     existing_cluster_id: Optional[str] = None
     group_name: Optional[str] = None
     secret: Optional[DatabricksSecret] = None
-    environment: Optional[str] = "prod"
     s3_credentials: Optional[dict] = None
     cloud_pickle_by_value: Optional[List[str]] = Field(default_factory=list)
     cloud_pickle_infer_base_module: Optional[bool] = True
