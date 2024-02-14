@@ -53,6 +53,7 @@ def gcp_resource(gcp_environment, gcp_machine_config):
 @pytest.fixture()
 def databricks_resource():
     return DatabricksResource(
+        storage_location="s3://test-bucket/cascade",
         worker_count=DatabricksAutoscaleConfig(min_workers=5, max_workers=10),
         cloud_pickle_by_value=["a", "b"],
     )
@@ -107,6 +108,7 @@ def test_databricks_resource(
     configuration = f"""
 {test_job_name}:
     type: DatabricksResource
+    storage_location: {databricks_resource.storage_location}    
     worker_count:
         min_workers: {databricks_resource.worker_count.min_workers}
         max_workers: {databricks_resource.worker_count.max_workers}
