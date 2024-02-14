@@ -233,7 +233,7 @@ def remote(
             if resource.cloud_pickle_infer_base_module:
                 base_module_name = _infer_base_module(func)
                 # if base module is __main__ or None, it can't be registered
-                if base_module_name.startswith("__") or base_module_name is None:
+                if base_module_name is None or base_module_name.startswith("__"):
                     prefect_logger.warn(failed_to_infer_base)
                 else:
                     resource.cloud_pickle_by_value.append(base_module_name)
