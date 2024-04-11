@@ -12,6 +12,9 @@ from block_cascade.executors.vertex.resource import (
     GcpResource,
 )
 
+GCP_PROJECT = "test-project"
+GCP_STORAGE_LOCATION = f"gs://{GCP_PROJECT}-cascade/"
+
 
 @pytest.fixture(params=["cascade.yaml", "cascade.yml"])
 def configuration_filename(request):
@@ -19,8 +22,13 @@ def configuration_filename(request):
 
 
 @pytest.fixture()
+def storage_location():
+    return GCP_STORAGE_LOCATION
+
+
+@pytest.fixture()
 def gcp_project():
-    return "test-project"
+    return GCP_PROJECT
 
 
 @pytest.fixture()
@@ -39,9 +47,12 @@ def gcp_machine_config():
 
 
 @pytest.fixture
-def gcp_environment(gcp_project, gcp_location, gcp_service_account):
+def gcp_environment(storage_location, gcp_project, gcp_location, gcp_service_account):
     return GcpEnvironmentConfig(
-        project=gcp_project, service_account=gcp_service_account, region=gcp_location
+        storage_location=storage_location,
+        project=gcp_project,
+        service_account=gcp_service_account,
+        region=gcp_location,
     )
 
 
@@ -91,6 +102,7 @@ def test_gcp_resource(
         type: {gcp_resource.chief.type}
         count: {gcp_resource.chief.count}
     environment:
+        storage_location: {gcp_resource.environment.storage_location}
         project: {gcp_resource.environment.project}
         service_account: {gcp_resource.environment.service_account}
         region: {gcp_resource.environment.region}
@@ -130,6 +142,7 @@ def test_merged_resources(
 default:
     GcpResource:
         environment:
+            storage_location: {gcp_resource.environment.storage_location}
             project: "ds-cash-dev"
             service_account: {gcp_resource.environment.service_account}
             region: {gcp_resource.environment.region}

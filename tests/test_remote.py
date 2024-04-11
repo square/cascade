@@ -12,6 +12,7 @@ if PREFECT_VERSION == 2:
     from prefect.context import FlowRunContext, TaskRunContext
 
 GCP_PROJECT = "test-project"
+GCP_STORAGE_LOCATION = f"gs://{GCP_PROJECT}-cascade/"
 
 
 @pytest.fixture(autouse=True)
@@ -60,7 +61,10 @@ def test_remote_no_sugar():
 def test_exception_when_environment_cannot_be_inferred():
     machine_config = GcpMachineConfig(type="n1-standard-4")
     remote_resource = GcpResource(
-        chief=machine_config, environment=GcpEnvironmentConfig(project=GCP_PROJECT)
+        chief=machine_config,
+        environment=GcpEnvironmentConfig(
+            storage_location=GCP_STORAGE_LOCATION, project=GCP_PROJECT
+        ),
     )
 
     @remote
