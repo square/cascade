@@ -79,11 +79,10 @@ class GcpEnvironmentConfig:
     Description of the specific GCP environment in which a job will run.
     A valid project and service account are required.
 
+    storage_location: str
+        Path to the directory on GCS where files will be staged and output written
     project: Optional[str]
         GCP Project used to launch job.
-    storage_location: Optional[str]
-        Path to the directory on GCS where files will be staged and output written
-        default: f"gs://cascade-{project}/"
     service_account: Optional[str] = None
         The name of the service account that will be used for the job.
     region: Optional[str] = None
@@ -95,8 +94,8 @@ class GcpEnvironmentConfig:
         the project name in the container registry URL.
     """
 
+    storage_location: str
     project: Optional[str] = None
-    storage_location: Optional[str] = None
     service_account: Optional[str] = None
     region: Optional[str] = None
     network: Optional[str] = None
