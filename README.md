@@ -26,7 +26,7 @@ environment_config = GcpEnvironmentConfig(
     region="us-west1",
     service_account=f"example-project@vertex.iam.gserviceaccount.com",
     image="us.gcr.io/example-project/cascade/cascade-test",
-    network="projects/123986066123/global/networks/neteng-shared-vpc-prod"
+    network="projects/123456789123/global/networks/vpc-prod"
 )
 gcp_resource = GcpResource(
     chief=machine_config,

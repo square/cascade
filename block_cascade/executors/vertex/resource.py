@@ -105,7 +105,7 @@ class GcpEnvironmentConfig:
     @classmethod
     def with_shared_vpc(cls: T, **kwargs) -> Type[T]:
         return cls(
-            network="projects/603986066384/global/networks/neteng-shared-vpc-prod",
+            network="projects/123456789123/global/networks/vpc-prod",
             **kwargs,
         )
 
