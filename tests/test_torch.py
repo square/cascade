@@ -131,7 +131,7 @@ def test_torchjob():
         project="ds-cash-production",
         service_account="ds-cash-production@ds-cash-production.iam.gserviceaccount.com",
         region="us-west1",
-        network="projects/603986066384/global/networks/neteng-shared-vpc-prod",
+        network="projects/123456789123/global/networks/shared-vpc",
         image="us.gcr.io/ds-cash-production/cascade/cascade-test",
     )
 
