@@ -127,6 +127,7 @@ def test_torchjob():
     accelerator_config = GcpAcceleratorConfig(count=2, type=ACCEL_MACHINE_TYPE)
 
     environment = GcpEnvironmentConfig(
+        storage_location="gs://ds-cash-production-cascade/",
         project="ds-cash-production",
         service_account="ds-cash-production@ds-cash-production.iam.gserviceaccount.com",
         region="us-west1",
