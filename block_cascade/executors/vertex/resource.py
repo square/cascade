@@ -102,13 +102,6 @@ class GcpEnvironmentConfig:
     network: Optional[str] = None
     image: Optional[str] = None
 
-    @classmethod
-    def with_shared_vpc(cls: T, **kwargs) -> Type[T]:
-        return cls(
-            network="projects/123456789123/global/networks/vpc-prod",
-            **kwargs,
-        )
-
     @validator("image")
     def image_setter(cls, v, values):  # noqa: N805
         image = v
