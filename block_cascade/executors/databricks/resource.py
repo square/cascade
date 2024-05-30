@@ -98,6 +98,8 @@ class DatabricksResource:
     python_libraries: Optional[List[str]] = None
         If provided, install these additional libraries on the cluster when the
         remote task is run
+    timeout_seconds: int = 86400
+        The maximum time this job can run for; default is 24 hours.
 
     """  # noqa: E501
 
@@ -117,6 +119,7 @@ class DatabricksResource:
     cloud_pickle_infer_base_module: Optional[bool] = True
     task_args: Optional[dict] = None
     python_libraries: Optional[List[str]] = None
+    timeout_seconds: int = 86400
 
     def __post_init__(self):
         if self.group_name is None:

@@ -46,7 +46,7 @@ class DatabricksJob:
     run_path: str
     cluster_policy_id: str
     existing_cluster_id: Optional[str] = None
-    timeout_seconds: str = 86400
+    timeout_seconds: int = 86400
 
     def create_payload(self):
         """"""
