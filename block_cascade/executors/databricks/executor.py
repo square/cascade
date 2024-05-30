@@ -241,6 +241,7 @@ class DatabricksExecutor(Executor):
                 self.cluster_policy
             ),
             run_path=self.run_path,
+            timeout_seconds=self.resource.timeout_seconds,
         )
 
     def _run(self):
