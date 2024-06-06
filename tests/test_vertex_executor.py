@@ -24,7 +24,7 @@ def add(a: int, b: int) -> int:
 
 # status of job as global variables
 CANCELLED_STATUS = Status(job_state.JobState.JOB_STATE_CANCELLED, "test job cancelled")
-STAGE_METHOD = "block_cascade.executors.vertex.executor.Executor._stage"
+STAGE_METHOD = "block_cascade.executors.vertex.executor.VertexExecutor._stage"
 STATUS_METHOD = "block_cascade.executors.vertex.executor.VertexExecutor._get_status"
 START_METHOD = "block_cascade.executors.vertex.executor.VertexExecutor._start"
 VERTEX_PROPERTY = "block_cascade.executors.vertex.executor.VertexExecutor.vertex"
@@ -61,9 +61,9 @@ class TestVertexExecutor(TestCase):
         with self.assertRaises(VertexCancelledError):
             self.vertex_executor.run()
 
-        assert stage_mock.called_once()
-        assert start_mock.called_once()
-        assert status_mock.called_once()
+        stage_mock.assert_called_once()
+        start_mock.assert_called_once()
+        status_mock.assert_called_once()
 
     def test_create_job(self):
         """
