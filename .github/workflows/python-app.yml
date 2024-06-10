@@ -27,9 +27,6 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install --without torch
-    - name: Create /tmp/test directory
-      run: |
-        mkdir -p /tmp/test
     - name: Test
       run: |
         poetry run pytest
