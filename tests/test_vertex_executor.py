@@ -1,5 +1,5 @@
 import os
-from unittest import TestCase
+import pytest
 from unittest.mock import PropertyMock, patch
 
 import cloudpickle
@@ -29,6 +29,7 @@ STATUS_METHOD = "block_cascade.executors.vertex.executor.VertexExecutor._get_sta
 START_METHOD = "block_cascade.executors.vertex.executor.VertexExecutor._start"
 VERTEX_PROPERTY = "block_cascade.executors.vertex.executor.VertexExecutor.vertex"
 STORAGE_PATH = "block_cascade.executors.vertex.executor.VertexExecutor.storage_path"
+FILESYSTEM = "block_cascade.executors.vertex.executor.gcsfs.GCSFileSystem"
 
 # Create a GCP resource
 machine_config = GcpMachineConfig("n1-standard-1")
@@ -39,62 +40,67 @@ gcp_resource = GcpResource(
     environment=environment_config,
 )
 
-
-class TestVertexExecutor(TestCase):
-    def setUp(self):
-        self.vertex_executor = VertexExecutor(resource=gcp_resource, func=add)
-
-    @patch(STAGE_METHOD)
-    @patch(START_METHOD, return_value="test_job")
-    @patch(STATUS_METHOD, return_value=CANCELLED_STATUS)
-    @patch(VERTEX_PROPERTY, return_value="dummy_api")
-    def test_run(self, stage_mock, start_mock, status_mock, _):
-        """
-        Tests that the VertexExecutor.run() method calls the correct private methods
-        """
-        # swap the fs for a local fs
-        self.vertex_executor.fs = LocalFileSystem()
-        self.vertex_executor.storage_location = (
-            f"{os.path.expanduser('~')}/cascade-storage/"
-        )
-
-        with self.assertRaises(VertexCancelledError):
-            self.vertex_executor.run()
-
-        start_mock.assert_called_once()
-        status_mock.assert_called_once()
-
-        # The stage mock is not working, but _stage is being called correctly
-        # stage_mock.assert_called_once()
-
-    def test_create_job(self):
-        """
-        Tests that a can be VertexJob is from a VertexExecutor.
-        """
-
-        test_job = self.vertex_executor.create_job()
-        assert isinstance(test_job, VertexJob)
-
-        custom_job = test_job.create_payload()
-        assert isinstance(custom_job, dict)
-
-    @patch(STORAGE_PATH, new_callable=PropertyMock, return_value="/tmp/test")
-    def test_stage(self, mock_storage_path):
-        """
-        Tests that the VertexExecutor._stage() correctly stages a function
-        """
-
-        executor = VertexExecutor(
+@pytest.fixture
+def vertex_executor_fixture():
+    with patch(STAGE_METHOD) as stage_mock, \
+         patch(START_METHOD, return_value="test_job") as start_mock, \
+         patch(STATUS_METHOD, return_value=CANCELLED_STATUS) as status_mock, \
+         patch(VERTEX_PROPERTY, return_value="dummy_api") as vertex_property_mock, \
+         patch(FILESYSTEM, LocalFileSystem) as fs_mock:
+        
+        vertex_executor = VertexExecutor(
             resource=gcp_resource,
             func=wrapped_partial(add, 1, 2),
         )
+        vertex_executor.storage_location = (
+            f"{os.path.expanduser('~')}/cascade-storage/"
+        )
 
-        # use the local filesystem for test
-        executor.fs = LocalFileSystem(auto_mkdir=True)
+        stage_mock.reset_mock()
+        start_mock.reset_mock()
+        status_mock.reset_mock()
 
-        executor._stage()
+        yield vertex_executor, stage_mock, start_mock, status_mock
 
-        with executor.fs.open(executor.staged_filepath, "rb") as f:
-            func = cloudpickle.load(f)
+def test_run(vertex_executor_fixture):
+    """
+    Tests that the VertexExecutor.run() method calls the correct private methods
+    """
+    # swap the fs for a local fs
+    vertex_executor, stage_mock, start_mock, status_mock = vertex_executor_fixture
+    vertex_executor.storage_location = (
+        f"{os.path.expanduser('~')}/cascade-storage/"
+    )
 
-        assert func() == 3
+    with pytest.raises(VertexCancelledError):
+        vertex_executor.run()
+
+    start_mock.assert_called_once()
+    status_mock.assert_called_once()
+    stage_mock.assert_called_once()
+
+def test_create_job(vertex_executor_fixture):
+    """
+    Tests that a VertexJob can be created from a VertexExecutor.
+    """
+    vertex_executor = vertex_executor_fixture[0]
+    test_job = vertex_executor.create_job()
+    assert isinstance(test_job, VertexJob)
+
+    custom_job = test_job.create_payload()
+    assert isinstance(custom_job, dict)
+
+@patch(STORAGE_PATH, new_callable=PropertyMock, return_value="/tmp/test")
+def test_stage(_, vertex_executor_fixture):
+    """
+    Tests that the VertexExecutor._stage() correctly stages a function
+    """
+    executor = vertex_executor_fixture[0]
+
+    executor._stage()
+
+    with executor.fs.open(executor.staged_filepath, "rb") as f:
+        func = cloudpickle.load(f)
+
+    assert func() == 3
+

@@ -115,7 +115,7 @@ def prepare_dataloader(dataset: torch.utils.data.Dataset, batch_size: int):
 
 
 @pytest.mark.skipif(
-    "KOCHIKU_ENV" in os.environ or "BUILDKITE_PIPELINE" in os.environ,
+    "BUILDKITE_PIPELINE" in os.environ,
     reason="Run integration tests locally only",
 )
 def test_torchjob():
