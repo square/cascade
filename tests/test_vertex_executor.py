@@ -45,8 +45,8 @@ def vertex_executor_fixture():
     with patch(STAGE_METHOD) as stage_mock, \
          patch(START_METHOD, return_value="test_job") as start_mock, \
          patch(STATUS_METHOD, return_value=CANCELLED_STATUS) as status_mock, \
-         patch(VERTEX_PROPERTY, return_value="dummy_api") as vertex_property_mock, \
-         patch(FILESYSTEM, LocalFileSystem) as fs_mock:
+         patch(VERTEX_PROPERTY, return_value="dummy_api"), \
+         patch(FILESYSTEM, LocalFileSystem):
         
         vertex_executor = VertexExecutor(
             resource=gcp_resource,
@@ -87,13 +87,14 @@ def test_create_job(vertex_executor_fixture):
     custom_job = test_job.create_payload()
     assert isinstance(custom_job, dict)
 
-
+@patch(VERTEX_PROPERTY, return_value="dummy_api")
+@patch(FILESYSTEM, LocalFileSystem)
 def test_stage(tmp_path):
     """
     Tests that the VertexExecutor._stage() correctly stages a function
     """
-    with patch(VERTEX_PROPERTY, return_value="dummy_api") as vertex_property_mock, \
-         patch(FILESYSTEM, LocalFileSystem) as fs_mock:
+    with patch(VERTEX_PROPERTY, return_value="dummy_api"), \
+         patch(FILESYSTEM, LocalFileSystem):
         
         executor = VertexExecutor(
             resource=gcp_resource,
