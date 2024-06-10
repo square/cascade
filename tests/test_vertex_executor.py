@@ -68,9 +68,6 @@ def test_run(vertex_executor_fixture):
     """
     # swap the fs for a local fs
     vertex_executor, stage_mock, start_mock, status_mock = vertex_executor_fixture
-    vertex_executor.storage_location = (
-        f"{os.path.expanduser('~')}/cascade-storage/"
-    )
 
     with pytest.raises(VertexCancelledError):
         vertex_executor.run()
