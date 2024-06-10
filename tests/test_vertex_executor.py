@@ -53,7 +53,7 @@ def vertex_executor_fixture():
             func=wrapped_partial(add, 1, 2),
         )
         vertex_executor.storage_location = (
-            f"{os.path.expanduser('~')}/cascade-storage/"
+            f"{os.path.expanduser('~')}/cascade-storage"
         )
 
         stage_mock.reset_mock()
@@ -87,19 +87,27 @@ def test_create_job(vertex_executor_fixture):
     custom_job = test_job.create_payload()
     assert isinstance(custom_job, dict)
 
-@patch(STORAGE_PATH, new_callable=PropertyMock, return_value="/tmp/test")
-def test_stage(_, vertex_executor_fixture):
+
+def test_stage(tmp_path):
     """
     Tests that the VertexExecutor._stage() correctly stages a function
     """
-    executor = vertex_executor_fixture[0]
+    with patch(VERTEX_PROPERTY, return_value="dummy_api") as vertex_property_mock, \
+         patch(FILESYSTEM, LocalFileSystem) as fs_mock:
+        
+        executor = VertexExecutor(
+            resource=gcp_resource,
+            func=wrapped_partial(add, 1, 2),
+        )
+        executor._fs = LocalFileSystem(auto_mkdir=True)
+        executor.storage_location = str(tmp_path)
 
-    executor._stage()
+        executor._stage()
 
-    assert os.path.exists(executor.staged_filepath), "Staged file does not exist"
+        assert os.path.exists(executor.staged_filepath), "Staged file does not exist"
 
-    with executor.fs.open(executor.staged_filepath, "rb") as f:
-        func = cloudpickle.load(f)
+        with executor.fs.open(executor.staged_filepath, "rb") as f:
+            func = cloudpickle.load(f)
 
-    assert func() == 3
+        assert func() == 3
 
