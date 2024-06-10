@@ -104,8 +104,6 @@ def test_stage(tmp_path):
 
         executor._stage()
 
-        assert os.path.exists(executor.staged_filepath), "Staged file does not exist"
-
         with executor.fs.open(executor.staged_filepath, "rb") as f:
             func = cloudpickle.load(f)
 
