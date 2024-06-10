@@ -87,8 +87,6 @@ def test_create_job(vertex_executor_fixture):
     custom_job = test_job.create_payload()
     assert isinstance(custom_job, dict)
 
-@patch(VERTEX_PROPERTY, return_value="dummy_api")
-@patch(FILESYSTEM, LocalFileSystem)
 def test_stage(tmp_path):
     """
     Tests that the VertexExecutor._stage() correctly stages a function
