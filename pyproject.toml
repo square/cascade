@@ -19,8 +19,8 @@ google-cloud-aiplatform = "^1.39.0"
 google-cloud-monitoring = "^2.16.0"
 google-cloud-resource-manager = "^1.10.4"
 importlib_resources = {version="*", python="<3.9"}
-prefect =  ">=1.0"
-pydantic = ">=1.10.0,<2.0.0"
+prefect = ">=1.0"
+pydantic = ">=1.0.0,<3.0.0"
 s3fs = ">=2023.6.0"
 # Python 3.12 removed distutils; numpy 1.26.0 is the first version to support installing without it
 # Python 3.8 requires numpy 1.24
