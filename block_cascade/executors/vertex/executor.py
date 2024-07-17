@@ -196,7 +196,14 @@ class VertexExecutor(Executor):
                     module_name = deployment.entrypoint
 
                 module_name = module_name.lstrip("/")
-                bucket = storage.data["bucket_path"]
+                #
+                # This is hardcoded to only support 
+                # prefect.filesystems.GCS or prefect_gcp.cloud_storage.GCSBucket
+                # storage blocks.
+                #
+                # TODO: This should be generalized to accept any storage block.
+                #
+                bucket = storage.data.get("bucket_path", "bucket")
                 deployment_path = deployment.path.rstrip("/")
 
                 package_path = f"{bucket}/{deployment_path}/{module_name}"
