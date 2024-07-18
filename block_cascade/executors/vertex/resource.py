@@ -1,4 +1,5 @@
 from dataclasses import field
+import sys
 from typing import Iterable, Optional, Type, TypeVar
 
 from pydantic import validator
@@ -9,6 +10,12 @@ from block_cascade.executors.vertex.distributed.distributed_job import (
 )
 
 T = TypeVar("T", bound="GcpEnvironmentConfig")
+
+
+if sys.version_info.minor == 12:
+    pydantic_validator = lambda *args: validator(*args, allow_reuse=True)
+else:
+    pydantic_validator = validator
 
 
 @dataclass(frozen=True)
@@ -101,7 +108,7 @@ class GcpEnvironmentConfig:
     network: Optional[str] = None
     image: Optional[str] = None
 
-    @validator("image")
+    @pydantic_validator("image")
     def image_setter(cls, v, values):  # noqa: N805
         image = v
         # No image specified
@@ -144,7 +151,7 @@ class GcpResource:
     """
 
     chief: GcpMachineConfig = field(default_factory=GcpMachineConfig)
-    workers: GcpMachineConfig = None
+    workers: Optional[GcpMachineConfig] = None
     environment: Optional[GcpEnvironmentConfig] = None
     distributed_job: Optional[DistributedJobBase] = None
     persistent_resource_id: Optional[str] = None
