@@ -101,7 +101,7 @@ class GcpEnvironmentConfig:
     network: Optional[str] = None
     image: Optional[str] = None
 
-    @validator("image")
+    @validator("image", allow_resuse=True)
     def image_setter(cls, v, values):  # noqa: N805
         image = v
         # No image specified
@@ -144,7 +144,7 @@ class GcpResource:
     """
 
     chief: GcpMachineConfig = field(default_factory=GcpMachineConfig)
-    workers: GcpMachineConfig = None
+    workers: Optional[GcpMachineConfig] = None
     environment: Optional[GcpEnvironmentConfig] = None
     distributed_job: Optional[DistributedJobBase] = None
     persistent_resource_id: Optional[str] = None
