@@ -203,7 +203,16 @@ class VertexExecutor(Executor):
                 #
                 # TODO: This should be generalized to accept any storage block.
                 #
-                bucket = storage.data.get("bucket_path", "bucket")
+                bucket = storage.data.get(
+			        "bucket_path",
+			        storage.data.get(
+				        "bucket"
+			        )
+		        )
+                if not bucket:
+                    raise RuntimeError(
+                        f"Unable to parse bucket from storage block: {storage}"
+                    )
                 deployment_path = deployment.path.rstrip("/")
 
                 package_path = f"{bucket}/{deployment_path}/{module_name}"
