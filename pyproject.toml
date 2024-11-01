@@ -9,11 +9,11 @@ readme = "README.md"
 authors = ["Block"]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.13"
+python = ">=3.9,<3.13"
 cloudml-hypertune = "==0.1.0.dev6"
 cloudpickle = "^2.0"
 databricks-cli = ">=0.17.7"
-gcsfs = ">=2023.6.0"
+gcsfs = ">=2024"
 google-auth = "^2.23.2"
 google-cloud-aiplatform = "^1.39.0"
 google-cloud-monitoring = "^2.16.0"
@@ -21,13 +21,7 @@ google-cloud-resource-manager = "^1.10.4"
 importlib_resources = {version="*", python="<3.9"}
 prefect = ">=1.0"
 pydantic = ">=1.0.0,<3.0.0"
-s3fs = ">=2023.6.0"
-# Python 3.12 removed distutils; numpy 1.26.0 is the first version to support installing without it
-# Python 3.8 requires numpy 1.24
-numpy = [
-    {version=">=1.26.0", python=">=3.12"},
-    {version="<1.25", python="<3.9"}
-]
+s3fs = ">=2024"
 
 [tool.poetry.group.torch.dependencies]
 torch = ">=1.13.1"
