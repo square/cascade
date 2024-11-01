@@ -26,10 +26,8 @@ from block_cascade.executors.databricks.job import DatabricksJob
 from block_cascade.executors.databricks.resource import DatabricksResource
 from block_cascade.prefect import get_prefect_logger
 
-if sys.version_info.major >= 3 and sys.version_info.minor >= 9:
-    from importlib.resources import files
-else:  # python <3.9
-    from importlib_resources import files
+from importlib.resources import files
+
 
 lock = threading.Lock()
 
