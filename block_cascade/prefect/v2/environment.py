@@ -25,46 +25,62 @@ class PrefectEnvironmentClient(VertexAIEnvironmentInfoProvider):
     def __init__(self):
         self._current_deployment = None
         self._current_infrastructure = None
+        self._current_job_variables = None
 
     def get_container_image(self) -> Optional[str]:
-        infra = self._get_infrastructure_block()
-        if not infra:
-            return
+        job_variables = self._get_job_variables()
+        if job_variables:
+            return job_variables.get("image")
 
-        deployment_details = infra.data
-        return deployment_details.get("image")
+        infra = self._get_infrastructure_block()
+        if infra:
+            return infra.data.get("image")
+
+        return None
 
     def get_network(self) -> Optional[str]:
-        infra = self._get_infrastructure_block()
-        if not infra:
-            return
+        job_variables = self._get_job_variables()
+        if job_variables:
+            return job_variables.get("network")
 
-        deployment_details = infra.data
-        return deployment_details.get("network")
+        infra = self._get_infrastructure_block()
+        if infra:
+            return infra.data.get("network")
+
+        return None
 
     def get_project(self) -> Optional[str]:
-        infra = self._get_infrastructure_block()
-        if not infra:
-            return
+        job_variables = self._get_job_variables()
+        if job_variables:
+            return job_variables.get("credentials", {}).get("project")
 
-        deployment_details = infra.data
-        return deployment_details.get("gcp_credentials", {}).get("project")
+        infra = self._get_infrastructure_block()
+        if infra:
+            return infra.data.get("gcp_credentials", {}).get("project")
+
+        return None
 
     def get_region(self) -> Optional[str]:
-        infra = self._get_infrastructure_block()
-        if not infra:
-            return
+        job_variables = self._get_job_variables()
+        if job_variables:
+            return job_variables.get("region")
 
-        deployment_details = infra.data
-        return deployment_details.get("region")
+        infra = self._get_infrastructure_block()
+        if infra:
+            return infra.data.get("region")
+
+        return None
 
     def get_service_account(self) -> Optional[str]:
-        infra = self._get_infrastructure_block()
-        if not infra:
-            return
+        job_variables = self._get_job_variables()
+        if job_variables:
+            return job_variables.get("service_account_name")
 
-        deployment_details = infra.data
-        return deployment_details.get("service_account")
+        infra = self._get_infrastructure_block()
+        if infra:
+            return infra.data.get("service_account")
+
+        return None
 
     def _get_infrastructure_block(self) -> Optional[BlockDocument]:
         current_deployment = self._get_current_deployment()
@@ -76,6 +92,15 @@ class PrefectEnvironmentClient(VertexAIEnvironmentInfoProvider):
                 _fetch_block(current_deployment.infrastructure_document_id)
             )
         return self._current_infrastructure
+
+    def _get_job_variables(self) -> Optional[dict]:
+        current_deployment = self._get_current_deployment()
+        if not current_deployment:
+            return None
+
+        if not self._current_job_variables:
+            self._current_job_variables = current_deployment.job_variables
+        return self._current_job_variables
 
     def _get_current_deployment(self) -> Optional[DeploymentResponse]:
         flow_context = FlowRunContext.get()
