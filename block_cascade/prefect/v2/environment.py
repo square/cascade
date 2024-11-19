@@ -35,7 +35,6 @@ class PrefectEnvironmentClient(VertexAIEnvironmentInfoProvider):
         infra = self._get_infrastructure_block()
         if infra:
             return infra.data.get("image")
-
         return None
 
     def get_network(self) -> Optional[str]:
