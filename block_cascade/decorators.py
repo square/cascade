@@ -32,6 +32,7 @@ def remote(
     web_console_access: Optional[bool] = False,
     tune: Optional[Tune] = None,
     code_package: Optional[Path] = None,
+    no_resource_on_local: bool = False,
     *args,
     **kwargs,
 ):
@@ -147,6 +148,11 @@ def remote(
         # create a new wrapped partial function with the passed *args and **kwargs
         # so that it can be sent to the remote executor with its parameters
         packed_func = wrapped_partial(func, *args, **kwargs)
+
+        # if running a flow locally ignore the remote resource, even if specified
+        # necessary for running a @remote decorated task in a local flow
+        if not via_cloud and no_resource_on_local:
+            resource = None
 
         # if no resource is passed, run locally
         if resource is None:
