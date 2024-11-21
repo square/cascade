@@ -145,7 +145,7 @@ def remote(
         task_id = get_from_prefect_context("task_run_id", "LOCAL")
         task_name = get_from_prefect_context("task_run", "LOCAL")
 
-        via_cloud = is_prefect_cloud_deployment()  # always True in tests if set via the method
+        via_cloud = is_prefect_cloud_deployment()
         prefect_logger.info(f"Via cloud? {via_cloud}")
 
         # create a new wrapped partial function with the passed *args and **kwargs
