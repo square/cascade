@@ -213,7 +213,7 @@ class VertexExecutor(Executor):
                     raise RuntimeError(
                         f"Unable to parse bucket from storage block: {storage}"
                     )
-                deployment_path = deployment.path.rstrip("/")
+                deployment_path = storage.data.get("bucket_folder").rstrip("/") or deployment.path.rstrip("/")
 
                 package_path = f"{bucket}/{deployment_path}/{module_name}"
                 self._logger.info(
