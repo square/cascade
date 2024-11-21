@@ -85,7 +85,6 @@ def remote(
     no_resource_on_local: bool
         If true, set resource to None when running a Prefect flow locally
     """
-
     if not resource:
         resource_configurations = find_default_configuration() or {}
         if config_name:
@@ -110,6 +109,7 @@ def remote(
             resource=resource,
             tune=tune,
             code_package=code_package,
+            no_resource_on_local=no_resource_on_local,
             *args,
             **kwargs,
         )
@@ -134,6 +134,7 @@ def remote(
         tune = remote_args.get("tune", None)
         code_package = remote_args.get("code_package", None)
         web_console_access = remote_args.get("web_console_access", False)
+        no_resource_on_local = remote_args.get('no_resource_on_local', False)
 
         # get the prefect logger and flow metadata if available
         # to determine if this flow is running on the cloud
@@ -145,7 +146,6 @@ def remote(
         task_name = get_from_prefect_context("task_run", "LOCAL")
 
         via_cloud = is_prefect_cloud_deployment()  # always True in tests if set via the method
-        via_cloud = False
         prefect_logger.info(f"Via cloud? {via_cloud}")
 
         # create a new wrapped partial function with the passed *args and **kwargs
@@ -154,8 +154,6 @@ def remote(
 
         # if running a flow locally ignore the remote resource, even if specified
         # necessary for running a @remote decorated task in a local flow
-        print(f"Via cloud? {via_cloud}")
-        print(f"no_resource_on_local variable value: {no_resource_on_local}")
         if not via_cloud and no_resource_on_local:
             resource = None
 
