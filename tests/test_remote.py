@@ -6,6 +6,7 @@ import pytest
 from block_cascade import GcpEnvironmentConfig, GcpMachineConfig, GcpResource
 from block_cascade import remote
 from block_cascade.utils import PREFECT_VERSION
+
 if PREFECT_VERSION == 2:
     from prefect.context import FlowRunContext, TaskRunContext
 
