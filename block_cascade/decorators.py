@@ -155,6 +155,8 @@ def remote(
         # if running a flow locally ignore the remote resource, even if specified
         # necessary for running a @remote decorated task in a local flow
         if not via_cloud and no_resource_on_local:
+            prefect_logger.info("Not running in Prefect Cloud and no_resource_on_local=True."
+                                "Because of this Cascade remote resource set to None and LocalExecutor is used.")
             resource = None
 
         # if no resource is passed, run locally
