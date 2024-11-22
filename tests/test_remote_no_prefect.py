@@ -15,7 +15,7 @@ def test_remote_local_override():
         ),
     )
 
-    @remote(resource=gcp_resource, no_resource_on_local=True)
+    @remote(resource=gcp_resource, remote_resource_on_local=False)
     def multiply(a: int, b: int) -> int:
         return a * b
 
