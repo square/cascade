@@ -32,7 +32,7 @@ def remote(
     web_console_access: Optional[bool] = False,
     tune: Optional[Tune] = None,
     code_package: Optional[Path] = None,
-    no_resource_on_local: bool = False,
+    remote_resource_on_local: bool = True,
     *args,
     **kwargs,
 ):
@@ -82,8 +82,11 @@ def remote(
             - The function is not being executed from a Prefect2 Cloud Deployment
             - The function references a module that is not from a third party
             dependency, but from the same package the function is a member of.
-    no_resource_on_local: bool
-        If true, set resource to None when running a Prefect flow locally
+    remote_resource_on_local: bool
+        When running a Prefect flow locally:
+            - If True: use specified remote resource (GCPResource requires an Image URI)
+            - If False: set remote resource to None and fallback to LocalExecutor
+        If the flow is running the Prefect Cloud, this argument will have no effect, regardless of the value.
     """
     if not resource:
         resource_configurations = find_default_configuration() or {}
@@ -109,7 +112,7 @@ def remote(
             resource=resource,
             tune=tune,
             code_package=code_package,
-            no_resource_on_local=no_resource_on_local,
+            remote_resource_on_local=remote_resource_on_local,
             *args,
             **kwargs,
         )
@@ -134,7 +137,7 @@ def remote(
         tune = remote_args.get("tune", None)
         code_package = remote_args.get("code_package", None)
         web_console_access = remote_args.get("web_console_access", False)
-        no_resource_on_local = remote_args.get('no_resource_on_local', False)
+        remote_resource_on_local = remote_args.get('remote_resource_on_local', True)
 
         # get the prefect logger and flow metadata if available
         # to determine if this flow is running on the cloud
@@ -154,8 +157,8 @@ def remote(
 
         # if running a flow locally ignore the remote resource, even if specified
         # necessary for running a @remote decorated task in a local flow
-        if not via_cloud and no_resource_on_local:
-            prefect_logger.info("Not running in Prefect Cloud and no_resource_on_local=True."
+        if not via_cloud and not remote_resource_on_local:
+            prefect_logger.info("Not running in Prefect Cloud and remote_resource_on_local=False."
                                 "Because of this Cascade remote resource set to None and LocalExecutor is used.")
             resource = None
 
