@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from prefect.context import FlowRunContext
+from prefect import runtime
 
 from block_cascade.concurrency import run_async
 from block_cascade.gcp import VertexAIEnvironmentInfoProvider
@@ -102,16 +102,12 @@ class PrefectEnvironmentClient(VertexAIEnvironmentInfoProvider):
         return self._current_infrastructure
 
     def _get_current_deployment(self) -> Optional[DeploymentResponse]:
-        flow_context = FlowRunContext.get()
-        if (
-            not flow_context
-            or not flow_context.flow_run
-            or not flow_context.flow_run.deployment_id
-        ):
+        deployment_id = runtime.deployment.id
+        if not deployment_id:
             return None
 
         if not self._current_deployment:
             self._current_deployment = run_async(
-                _fetch_deployment(flow_context.flow_run.deployment_id)
+                _fetch_deployment(deployment_id)
             )
         return self._current_deployment

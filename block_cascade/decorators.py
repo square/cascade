@@ -219,8 +219,13 @@ def remote(
                     )
 
                 if not resource.environment.is_complete:
+                    missing_env_attributes = [
+                        attr for attr in ["project", "service_account", "region", "image"]
+                        if getattr(resource.environment, attr) is None
+                    ]
                     raise RuntimeError(
                         "Unable to infer remaining environment for GcpResource. "
+                        f"Missing attributes: {missing_env_attributes}. "
                         "Please provide a complete environment to the "
                         "configured GcpResource."
                     )
