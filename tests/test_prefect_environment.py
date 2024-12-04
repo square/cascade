@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import Mock, patch
 
 from prefect.client.schemas.responses import DeploymentResponse
-from prefect.context import FlowRunContext
 
 from block_cascade.prefect.v2.environment import PrefectEnvironmentClient
 
@@ -43,39 +42,28 @@ def mock__fetch_deployment(mock_deployment_response):
         yield
 
 @pytest.fixture(autouse=True)
-def mock_flow_run_context():
-    mock_flow_run = Mock()
-    mock_flow_run.deployment_id = "mock_deployment_id"
-
-    mock_context = Mock(spec=FlowRunContext)
-    mock_context.flow_run = mock_flow_run
-
-    with patch("block_cascade.prefect.v2.environment.FlowRunContext.get", return_value=mock_context):
-        yield mock_context
+def mock_deployment_id():
+    with patch("prefect.runtime.deployment.id", "mock_deployment_id"):
+        yield
 
 def test_get_container_image():
     client = PrefectEnvironmentClient()
-
     assert client.get_container_image() == "job_image"
 
 def test_get_network():
     client = PrefectEnvironmentClient()
-
     assert client.get_network() == "job_network"
 
 def test_get_project():
     client = PrefectEnvironmentClient()
-
     assert client.get_project() == "job_project"
 
 def test_get_region():
     client = PrefectEnvironmentClient()
-
     assert client.get_region() == "job_region"
 
 def test_get_service_account():
     client = PrefectEnvironmentClient()
-
     assert client.get_service_account() == "job_service_account"
 
 def test_fallback_to_infrastructure(mock_deployment_response):
