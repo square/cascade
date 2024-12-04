@@ -16,9 +16,15 @@ GCP_PROJECT = "test-project"
 GCP_STORAGE_LOCATION = f"gs://{GCP_PROJECT}-cascade/"
 
 
+@pytest.fixture(autouse=True)
+def clean_fs(fs):
+    # Reset the filesystem before each test
+    fs.reset()
+
+
 @pytest.fixture(params=["cascade.yaml", "cascade.yml"])
 def configuration_filename(request):
-    return request.param
+    return f"./{request.param}"
 
 
 @pytest.fixture()
@@ -75,7 +81,7 @@ def test_job_name():
     return "hello-world"
 
 
-def test_no_configuration():
+def test_no_configuration(fs):
     assert find_default_configuration() is None
 
 
