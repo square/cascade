@@ -2,6 +2,7 @@ import logging
 from typing import Optional, Union
 
 import prefect
+from prefect import runtime
 
 from block_cascade.concurrency import run_async
 from block_cascade.utils import PREFECT_SUBVERSION
@@ -63,18 +64,14 @@ def get_from_prefect_context(attr: str, default: str = "") -> str:
 
 
 def get_current_deployment() -> Optional[DeploymentResponse]:
-    flow_context = FlowRunContext.get()
-    if (
-        not flow_context
-        or not flow_context.flow_run
-        or not flow_context.flow_run.deployment_id
-    ):
+    deployment_id = runtime.deployment.id
+    if not deployment_id:
         return None
 
     global _CACHED_DEPLOYMENT  # noqa: PLW0603
     if not _CACHED_DEPLOYMENT:
         _CACHED_DEPLOYMENT = run_async(
-            _fetch_deployment(flow_context.flow_run.deployment_id)
+            _fetch_deployment(deployment_id)
         )
     return _CACHED_DEPLOYMENT
 
@@ -113,5 +110,4 @@ def get_prefect_logger(name: str = "") -> Union[logging.LoggerAdapter, logging.L
 
 
 def is_prefect_cloud_deployment() -> bool:
-    flow_context = FlowRunContext.get()
-    return flow_context and flow_context.flow_run.deployment_id is not None
+    return runtime.deployment.id is not None
