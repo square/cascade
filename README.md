@@ -71,50 +71,6 @@ No additional configuration is required in your application's code to use this t
 
 However, for authenticating to Databricks and AWS you will need to provide a token and secret key respectively. These can be passed directly to the `DatabricksResource` object or set as environment variables. The following example shows how to provide these values in the configuration file.
 
-## Persistent Resources in GCP
-Cascade supports creating persistent resources in GCP. These resources can be reused across multiple tasks and will persist until deleted manually by the user. This can be useful for debugging tasks that involve large images that take a long time to be loaded onto a node or for reserving scarce resources like A100 GPUs.
-
-You can create a persistent resource using the `cascade` CLI and suppling a `cascade.yml` with a configuration block that contains a `persistent_resource_id` field. This field will be used to identify the persistent resource when submitting tasks to it. It is recommended that you use the configuration file to define the resource as well as the tasks that will be submitted to it. This will ensure that the resource specified for your task is compatible with the shape of the persistent resource. 
-
-```yaml
-persistent-resource:
-  type: GcpResource
-  environment:
-      project: example-project
-      service_account: example-project@example-project.iam.gserviceaccount.com
-      region: us-west1
-      image: us.gcr.io/example-project/cascade/block-cascade
-  chief:
-      type: n1-standard-4
-  persistent_resource_id: my-persistent-resource
-```
-
-#### create the persistent resource
-```bash
-cascade create-persistent-resource --config persistent-resource
-```
-
-#### You can then submit cascade tasks to this persistent resource
-```python
-from block_cascade import remote
-
-
-@remote(config_name="persistent-resource", job_name="hello-world")
-def test_job():
-    print("Hello World")
-
-
-test_job()
-
-```
-
-#### Don't forget to delete the persistent resource when you are done with it
-```bash 
-cascade delete-persistent-resource -i my-persistent-resource
-```
-Note: persistent resource ids can not be reused. If you delete a persistent resource, you will need to create a new one with a different id.
-
-
 ## For Developers
 
 ### Using hermit for managing Python
