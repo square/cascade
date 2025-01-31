@@ -3,10 +3,18 @@ from unittest.mock import Mock, patch
 
 from prefect.client.schemas.responses import DeploymentResponse
 
-from block_cascade.prefect.v2.environment import PrefectEnvironmentClient
+@pytest.fixture
+def prefect_environment_client(mock_infrastructure_block, mock_deployment_response):
+    with patch("block_cascade.utils.PREFECT_VERSION", 2), \
+         patch("block_cascade.utils.PREFECT_SUBVERSION", 8), \
+         patch("prefect.runtime.deployment.id", "mock-deployment-id"), \
+         patch("block_cascade.prefect.v2.environment._fetch_block", return_value=mock_infrastructure_block), \
+         patch("block_cascade.prefect.v2.environment._fetch_deployment", return_value=mock_deployment_response):
+        from block_cascade.prefect.v2.environment import PrefectEnvironmentClient
+        client = PrefectEnvironmentClient()
+        yield client
 
-
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_infrastructure_block():
     infra_block = Mock()
     infra_block.data = {
@@ -16,8 +24,7 @@ def mock_infrastructure_block():
         "region": "infra_region",
         "service_account": "infra_service_account"
     }
-    with patch("block_cascade.prefect.v2.environment._fetch_block", return_value=infra_block):
-        yield infra_block
+    return infra_block
 
 @pytest.fixture
 def mock_job_variables():
@@ -36,42 +43,26 @@ def mock_deployment_response(mock_job_variables):
     mock_deployment.infrastructure_document_id = "mock_infrastructure_id"
     return mock_deployment
 
-@pytest.fixture(autouse=True)
-def mock__fetch_deployment(mock_deployment_response):
-    with patch("block_cascade.prefect.v2.environment._fetch_deployment", return_value=mock_deployment_response):
-        yield
+def test_get_container_image(prefect_environment_client):
+    assert prefect_environment_client.get_container_image() == "job_image"
 
-@pytest.fixture(autouse=True)
-def mock_deployment_id():
-    with patch("prefect.runtime.deployment.id", "mock_deployment_id"):
-        yield
+def test_get_network(prefect_environment_client):
+    assert prefect_environment_client.get_network() == "job_network"
 
-def test_get_container_image():
-    client = PrefectEnvironmentClient()
-    assert client.get_container_image() == "job_image"
+def test_get_project(prefect_environment_client):
+    assert prefect_environment_client.get_project() == "job_project"
 
-def test_get_network():
-    client = PrefectEnvironmentClient()
-    assert client.get_network() == "job_network"
+def test_get_region(prefect_environment_client):
+    assert prefect_environment_client.get_region() == "job_region"
 
-def test_get_project():
-    client = PrefectEnvironmentClient()
-    assert client.get_project() == "job_project"
+def test_get_service_account(prefect_environment_client):
+    assert prefect_environment_client.get_service_account() == "job_service_account"
 
-def test_get_region():
-    client = PrefectEnvironmentClient()
-    assert client.get_region() == "job_region"
-
-def test_get_service_account():
-    client = PrefectEnvironmentClient()
-    assert client.get_service_account() == "job_service_account"
-
-def test_fallback_to_infrastructure(mock_deployment_response):
-    client = PrefectEnvironmentClient()
+def test_fallback_to_infrastructure(prefect_environment_client, mock_deployment_response):
     mock_deployment_response.job_variables = None
 
-    assert client.get_container_image() == "infra_image"
-    assert client.get_network() == "infra_network"
-    assert client.get_project() == "infra_project"
-    assert client.get_region() == "infra_region"
-    assert client.get_service_account() == "infra_service_account"
+    assert prefect_environment_client.get_container_image() == "infra_image"
+    assert prefect_environment_client.get_network() == "infra_network"
+    assert prefect_environment_client.get_project() == "infra_project"
+    assert prefect_environment_client.get_region() == "infra_region"
+    assert prefect_environment_client.get_service_account() == "infra_service_account"
