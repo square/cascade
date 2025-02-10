@@ -79,7 +79,7 @@ def remote(
         An optional path to the first party code that your remo.
         This is only necessary if the following conditions hold true:
             - The function is desired to run in Vertex AI
-            - The function is not being executed from a Prefect2 Cloud Deployment
+            - The function is not being executed from a Prefect2/3 Cloud Deployment
             - The function references a module that is not from a third party
             dependency, but from the same package the function is a member of.
     remote_resource_on_local: bool

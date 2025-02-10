@@ -20,7 +20,9 @@ from block_cascade.executors.vertex.tune import Tune, TuneResult
 from block_cascade.gcp.monitoring import log_quotas_for_resource
 from block_cascade.utils import PREFECT_VERSION, maybe_convert
 
-if PREFECT_VERSION == 2:
+if PREFECT_VERSION == 3:
+    from block_cascade.prefect.v3 import get_current_deployment, get_storage_block
+elif PREFECT_VERSION == 2:
     from block_cascade.prefect.v2 import get_current_deployment, get_storage_block
 else:
     get_storage_block = None
@@ -111,7 +113,7 @@ class VertexExecutor(Executor):
             An optional path to the first party code that your remote execution needs.
             This is only necessary if the following conditions hold true:
                 - The function is desired to run in Vertex AI
-                - The function is not being executed from a Prefect2 Cloud Deployment
+                - The function is not being executed from a Prefect2/3 Cloud Deployment
                 - The function references a module that is not from a third party
                 dependency, but from the same package the function is a member of.
         """
@@ -181,9 +183,9 @@ class VertexExecutor(Executor):
         """
 
         package_path = None
-        if not self.code_package and PREFECT_VERSION == 2:
+        if not self.code_package and PREFECT_VERSION in (2, 3):
             self._logger.info(
-                "Checking if flow is running from a Prefect 2 Cloud deployment."
+                "Checking if flow is running from a Prefect 2/3 Cloud deployment."
             )
             deployment = get_current_deployment()
             if deployment:
