@@ -7,7 +7,7 @@ from google.cloud import monitoring_v3
 from google.cloud.monitoring_v3 import types as monitoring_types
 
 from block_cascade.executors.vertex.resource import GcpResource
-from block_cascade.prefect import get_prefect_logger
+from block_cascade.utils import get_logger
 
 SERVICE = "aiplatform.googleapis.com"
 RESOURCE_CATEGORY = "custom_model_training"
@@ -207,7 +207,7 @@ async def log_quotas_for_resource(resource: GcpResource) -> None:
     Args:
         resource (GcpResource)
     """
-    logger = get_prefect_logger(__name__)
+    logger = get_logger(__name__)
 
     resources_by_quota_metric = _get_resources_by_metric(resource)
 

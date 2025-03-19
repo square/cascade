@@ -1,32 +1,23 @@
 from functools import partial, wraps
-from importlib.metadata import version
 from pathlib import Path
 from typing import Callable, Optional, Union
 
-import requests
-
 from block_cascade.config import find_default_configuration
-from block_cascade.gcp import VMMetadataServerClient
+from block_cascade.context import Context
 from block_cascade.executors.databricks.resource import DatabricksResource
 from block_cascade.executors.databricks.executor import DatabricksExecutor
 from block_cascade.executors.local.executor import LocalExecutor
 from block_cascade.executors.vertex.executor import VertexExecutor
 from block_cascade.executors.vertex.resource import GcpEnvironmentConfig, GcpResource
 from block_cascade.executors.vertex.tune import Tune
-from block_cascade.prefect import (
-    PrefectEnvironmentClient,
-    get_from_prefect_context,
-    get_prefect_logger,
-    is_prefect_cloud_deployment,
-)
-from block_cascade.utils import _infer_base_module, wrapped_partial
+from block_cascade.utils import _infer_base_module, wrapped_partial, get_logger
 
 RESERVED_ARG_PREFIX = "remote_"
 
 
 def remote(
     func: Union[Callable, partial, None] = None,
-    resource: Union[GcpResource, DatabricksResource] = None,
+    resource: Optional[Union[GcpResource, DatabricksResource]] = None,
     config_name: Optional[str] = None,
     job_name: Optional[str] = None,
     web_console_access: Optional[bool] = False,
@@ -92,7 +83,7 @@ def remote(
         resource_configurations = find_default_configuration() or {}
         if config_name:
             resource = resource_configurations.get(config_name)
-        else:
+        elif job_name:
             resource = resource_configurations.get(job_name)
 
     remote_args = locals()
@@ -141,15 +132,12 @@ def remote(
 
         # get the prefect logger and flow metadata if available
         # to determine if this flow is running on the cloud
-        prefect_logger = get_prefect_logger(__name__)
+        logger = get_logger(__name__)
 
-        flow_id = get_from_prefect_context("flow_id", "LOCAL")
-        flow_name = get_from_prefect_context("flow_name", "LOCAL")
-        task_id = get_from_prefect_context("task_run_id", "LOCAL")
-        task_name = get_from_prefect_context("task_run", "LOCAL")
+        context = Context()
 
-        via_cloud = is_prefect_cloud_deployment()
-        prefect_logger.info(f"Via cloud? {via_cloud}")
+        via_cloud = context.kind == "PrefectContext"
+        logger.info(f"Via cloud? {via_cloud}")
 
         # create a new wrapped partial function with the passed *args and **kwargs
         # so that it can be sent to the remote executor with its parameters
@@ -158,28 +146,18 @@ def remote(
         # if running a flow locally ignore the remote resource, even if specified
         # necessary for running a @remote decorated task in a local flow
         if not via_cloud and not remote_resource_on_local:
-            prefect_logger.info("Not running in Prefect Cloud and remote_resource_on_local=False."
+            logger.info("Not running in Prefect Cloud and remote_resource_on_local=False."
                                 "Because of this Cascade remote resource set to None and LocalExecutor is used.")
             resource = None
 
         # if no resource is passed, run locally
         if resource is None:
-            prefect_logger.info("Executing task with LocalExecutor.")
+            logger.info("Executing task with LocalExecutor.")
             executor = LocalExecutor(func=packed_func)
 
         # if a GcpResource is passed, try to run on Vertex
         elif isinstance(resource, GcpResource):
-            prefect_logger.info("Executing task with GcpResource.")
-            # Align naming with labels defined by Prefect
-            # Infrastructure: https://github.com/PrefectHQ/prefect/blob/main/src/prefect/infrastructure/base.py#L134
-            # and mutated to be GCP compatible: https://github.com/PrefectHQ/prefect-gcp/blob/main/prefect_gcp/aiplatform.py#L214
-            labels = {
-                "prefect-io_flow-run-id": flow_id,
-                "prefect-io_flow-name": flow_name,
-                "prefect-io_task-name": task_name,
-                "prefect-io_task-id": task_id,
-                "block_cascade-version": version("block_cascade"),
-            }
+            logger.info("Executing task with GcpResource.")
             resource.environment = resource.environment or GcpEnvironmentConfig()
             if resource.environment.is_complete:
                 executor = VertexExecutor(
@@ -187,36 +165,22 @@ def remote(
                     name=job_name,
                     func=packed_func,
                     tune=tune,
-                    labels=labels,
-                    logger=prefect_logger,
+                    labels=context.tags(),
+                    logger=logger,
                     code_package=code_package,
                     web_console=web_console_access,
                 )
             else:
-                client = (
-                    PrefectEnvironmentClient()
-                    if via_cloud
-                    else VMMetadataServerClient()
-                )
-
-                try:
-                    if not resource.environment.image:
-                        resource.environment.image = client.get_container_image()
-                    if not resource.environment.project:
-                        resource.environment.project = client.get_project()
-                    if not resource.environment.service_account:
-                        resource.environment.service_account = (
-                            client.get_service_account()
-                        )
-                    if not resource.environment.region:
-                        resource.environment.region = client.get_region()
-                except requests.exceptions.ConnectionError:
-                    prefect_logger.warning(
-                        "Failure to connect to host. "
-                        "Execution environment must be outside of "
-                        "a GCP VM or as a result of Prefect "
-                        "Deployment."
+                if not resource.environment.image:
+                    resource.environment.image = context.image()
+                if not resource.environment.project:
+                    resource.environment.project = context.project()
+                if not resource.environment.service_account:
+                    resource.environment.service_account = (
+                        context.service_account()
                     )
+                if not resource.environment.region:
+                    resource.environment.region = context.region()
 
                 if not resource.environment.is_complete:
                     missing_env_attributes = [
@@ -234,8 +198,8 @@ def remote(
                     func=packed_func,
                     name=job_name,
                     tune=tune,
-                    labels=labels,
-                    logger=prefect_logger,
+                    labels=context.tags(),
+                    logger=logger,
                     code_package=code_package,
                     web_console=web_console_access,
                 )
@@ -243,7 +207,7 @@ def remote(
             isinstance(resource, DatabricksResource)
             or "DatabricksResource" in type(resource).__name__
         ):
-            prefect_logger.info("Executing task with DatabricksResource.")
+            logger.info("Executing task with DatabricksResource.")
             failed_to_infer_base = (
                 "Unable to infer base module of function. Specify "
                 "the base module in the `cloud_pickle_by_value` attribute "
@@ -253,7 +217,7 @@ def remote(
                 base_module_name = _infer_base_module(func)
                 # if base module is __main__ or None, it can't be registered
                 if base_module_name is None or base_module_name.startswith("__"):
-                    prefect_logger.warn(failed_to_infer_base)
+                    logger.warn(failed_to_infer_base)
                 else:
                     resource.cloud_pickle_by_value.append(base_module_name)
 

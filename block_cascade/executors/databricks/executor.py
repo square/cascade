@@ -24,7 +24,7 @@ from databricks_cli.sdk.api_client import ApiClient
 from block_cascade.executors.databricks.resource import DatabricksSecret
 from block_cascade.executors.databricks.job import DatabricksJob
 from block_cascade.executors.databricks.resource import DatabricksResource
-from block_cascade.prefect import get_prefect_logger
+from block_cascade.utils import get_logger
 
 from importlib.resources import files
 
@@ -101,7 +101,7 @@ class DatabricksExecutor(Executor):
         else:
             self.cluster_policy = self.resource.cluster_policy
 
-        self.logger = get_prefect_logger(__name__)
+        self.logger = get_logger(__name__)
 
     @property
     def databricks_secret(self):

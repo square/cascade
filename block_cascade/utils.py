@@ -4,22 +4,13 @@ import inspect
 from inspect import signature
 import itertools
 import logging
-from typing import List
+from typing import List, Union, Optional
 import subprocess
 import json
 
-import prefect
 
 logger = logging.getLogger(__name__)
 
-
-def detect_prefect_version(n) -> int:
-    return int(prefect.__version__.split(".")[n])
-
-
-PREFECT_VERSION, PREFECT_SUBVERSION = detect_prefect_version(0), detect_prefect_version(
-    1
-)
 
 INPUT_FILENAME = "function.pkl"
 DISTRIBUTED_JOB_FILENAME = "distributed_job.pkl"
@@ -97,3 +88,16 @@ def wrapped_partial(func, *args, **kwargs):
     partial_func = partial(func, *args, **kwargs)
     setattr(partial_func, "__name__", func.__name__)
     return partial_func
+
+
+def get_logger(name: Optional[str] = None) -> Union[logging.Logger, logging.LoggerAdapter]:
+    try:
+        from block_cascade.prefect import get_prefect_logger
+        from prefect.exceptions import MissingContextError
+        return get_prefect_logger(name or "")
+    except ImportError:
+        if name is None:
+            frame = inspect.stack()[1]
+            module = inspect.getmodule(frame[0])
+            name = module.__name__ if module else "__main__"
+        return logging.getLogger(name)
