@@ -5,7 +5,7 @@ import prefect
 from prefect import runtime
 
 from block_cascade.concurrency import run_async
-from block_cascade.utils import PREFECT_SUBVERSION
+from block_cascade.prefect.version import PREFECT_SUBVERSION
 
 if PREFECT_SUBVERSION <= 7:
     from prefect.orion.schemas.core import BlockDocument

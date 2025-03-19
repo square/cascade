@@ -26,7 +26,7 @@ jobs:
         pip install poetry
     - name: Install dependencies
       run: |
-        poetry install --without torch
+        poetry install --without torch -E prefect
     - name: Test
       run: |
         poetry run pytest
