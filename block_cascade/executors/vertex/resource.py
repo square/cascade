@@ -1,9 +1,7 @@
-from dataclasses import field
 import sys
-from typing import Iterable, Optional, Type, TypeVar
+from typing import Iterable, Optional, TypeVar
 
-from pydantic import validator
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from block_cascade.executors.vertex.distributed.distributed_job import (
     DistributedJobBase,
@@ -12,14 +10,7 @@ from block_cascade.executors.vertex.distributed.distributed_job import (
 T = TypeVar("T", bound="GcpEnvironmentConfig")
 
 
-if sys.version_info.minor == 12:
-    pydantic_validator = lambda *args: validator(*args, allow_reuse=True)
-else:
-    pydantic_validator = validator
-
-
-@dataclass(frozen=True)
-class GcpAcceleratorConfig:
+class GcpAcceleratorConfig(BaseModel):
     """
     Description of a GPU accelerator to attach to a machine. Accelerator type and count
     must be compatabile with the machine type.
@@ -33,8 +24,7 @@ class GcpAcceleratorConfig:
     type: str = "NVIDIA_TESLA_T4"
 
 
-@dataclass(frozen=True)
-class NfsMountConfig:
+class NfsMountConfig(BaseModel):
     """
     Description of an NFS mount to attach to a machine.
     """
@@ -44,8 +34,7 @@ class NfsMountConfig:
     mount_point: str
 
 
-@dataclass(frozen=True)
-class GcpMachineConfig:
+class GcpMachineConfig(BaseModel):
     """
     Description of a VM type that will be provisioned for a job in GCP.
     GCPResources are composed of one or more machines.
@@ -80,8 +69,7 @@ class GcpMachineConfig:
     nfs_mounts: Optional[Iterable[NfsMountConfig]] = None
 
 
-@dataclass(config=dict(validate_assignment=True))
-class GcpEnvironmentConfig:
+class GcpEnvironmentConfig(BaseModel, validate_assignment=True):
     """
     Description of the specific GCP environment in which a job will run.
     A valid project and service account are required.
@@ -108,10 +96,10 @@ class GcpEnvironmentConfig:
     network: Optional[str] = None
     image: Optional[str] = None
 
-    @pydantic_validator("image")
-    def image_setter(cls, v, values):  # noqa: N805
+    @field_validator("image", mode="after")
+    @classmethod
+    def image_setter(cls, v: Optional[str], info: ValidationInfo) -> Optional[str]:  # noqa: N805
         image = v
-        # No image specified
         if image is None:
             return image
         # Full URL
@@ -119,7 +107,7 @@ class GcpEnvironmentConfig:
             return image
         # Just the image tag
         else:
-            return f"us.gcr.io/{values['project']}/{image}"
+            return f"us.gcr.io/{info.data['project']}/{image}"
 
     @property
     def is_complete(self):
@@ -131,8 +119,7 @@ class GcpEnvironmentConfig:
         return all([self.project, self.service_account, self.region, self.image])
 
 
-@dataclass
-class GcpResource:
+class GcpResource(BaseModel):
     """
     Description of a GCP computing resource and its environment
     A resource consists of a GCPEnvironmentConfig and one or more GCPMachineConfigs
@@ -150,7 +137,7 @@ class GcpResource:
     to the chief or worker machine config object.
     """
 
-    chief: GcpMachineConfig = field(default_factory=GcpMachineConfig)
+    chief: GcpMachineConfig = Field(default_factory=GcpMachineConfig)
     workers: Optional[GcpMachineConfig] = None
     environment: Optional[GcpEnvironmentConfig] = None
     distributed_job: Optional[DistributedJobBase] = None

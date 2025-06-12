@@ -32,11 +32,11 @@ STORAGE_PATH = "block_cascade.executors.vertex.executor.VertexExecutor.storage_p
 FILESYSTEM = "block_cascade.executors.vertex.executor.gcsfs.GCSFileSystem"
 
 # Create a GCP resource
-machine_config = GcpMachineConfig("n1-standard-1")
+machine_config = GcpMachineConfig(type="n1-standard-1")
 environment_config = gcp_environment
 
 gcp_resource = GcpResource(
-    machine_config,
+    chief=machine_config,
     environment=environment_config,
 )
 
