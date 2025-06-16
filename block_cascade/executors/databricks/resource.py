@@ -1,11 +1,10 @@
 import os
 from typing import List, Optional, Union
 
-from pydantic.dataclasses import Field, dataclass
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class DatabricksSecret:
+class DatabricksSecret(BaseModel):
     """Databricks secret to auth to Databricks
 
     Parameters
@@ -18,8 +17,7 @@ class DatabricksSecret:
     token: str
 
 
-@dataclass(frozen=True)
-class DatabricksAutoscaleConfig:
+class DatabricksAutoscaleConfig(BaseModel):
     """Configuration for autoscaling on DataBricks clusters.
 
     Parameters
@@ -31,12 +29,11 @@ class DatabricksAutoscaleConfig:
 
     """
 
-    min_workers: Optional[int] = 1
-    max_workers: Optional[int] = 8
+    min_workers: int = 1
+    max_workers: int = 8
 
 
-@dataclass()
-class DatabricksResource:
+class DatabricksResource(BaseModel):
     """Description of a Databricks Cluster
 
     Parameters
@@ -111,7 +108,7 @@ class DatabricksResource:
     cluster_spec_overrides: Optional[dict] = None
     cluster_policy: Optional[str] = None
     existing_cluster_id: Optional[str] = None
-    group_name: Optional[str] = None
+    group_name: str = Field(default_factory=lambda: os.environ.get("DATABRICKS_GROUP", "default-group"))
     secret: Optional[DatabricksSecret] = None
     environment: Optional[str] = "prod"
     s3_credentials: Optional[dict] = None
@@ -120,7 +117,3 @@ class DatabricksResource:
     task_args: Optional[dict] = None
     python_libraries: Optional[List[str]] = None
     timeout_seconds: int = 86400
-
-    def __post_init__(self):
-        if self.group_name is None:
-            self.group_name = os.environ.get("DATABRICKS_GROUP", "default-group")

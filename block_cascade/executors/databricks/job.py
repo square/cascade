@@ -1,6 +1,5 @@
 """ Data model for task running on Databricks
 """
-from dataclasses import dataclass
 from importlib.metadata import version
 from typing import Optional
 
@@ -9,11 +8,12 @@ from block_cascade.executors.databricks.resource import (
     DatabricksResource,
 )
 
+from pydantic import BaseModel
+
 ARTIFACTORY = "https://artifactory.global.square/artifactory/api/pypi/block-pypi/simple"
 
 
-@dataclass(frozen=True)
-class DatabricksJob:
+class DatabricksJob(BaseModel):
     """A description of a job to run on Databricks
 
     Attributes
