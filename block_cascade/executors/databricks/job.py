@@ -6,12 +6,10 @@ from typing import Any, Optional
 from block_cascade.executors.databricks.resource import (
     DatabricksAutoscaleConfig,
     DatabricksResource,
-    PythonLibrary
+    DatabricksPythonLibrary
 )
 
 from pydantic import BaseModel
-
-ARTIFACTORY = "https://artifactory.global.square/artifactory/api/pypi/block-pypi/simple"
 
 
 class DatabricksJob(BaseModel):
@@ -93,7 +91,7 @@ class DatabricksJob(BaseModel):
             if any(lib == package.name for package in self.resource.python_libraries):
                 continue
             self.resource.python_libraries.append(
-                PythonLibrary(
+                DatabricksPythonLibrary(
                     name=lib
                 )
             )

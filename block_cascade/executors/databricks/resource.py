@@ -37,7 +37,7 @@ class DatabricksAutoscaleConfig(BaseModel):
     max_workers: int = 8
 
 
-class PythonLibrary(BaseModel):
+class DatabricksPythonLibrary(BaseModel):
     """Configuration for a Python library to be installed on a Databricks cluster.
     
     Reference: https://docs.databricks.com/aws/en/reference/jobs-2.0-api#pythonpypilibrary
@@ -166,5 +166,5 @@ class DatabricksResource(BaseModel):
     cloud_pickle_by_value: List[str] = Field(default_factory=list)
     cloud_pickle_infer_base_module: bool = True
     task_args: Optional[dict] = None
-    python_libraries: list[PythonLibrary] = Field(default_factory=list)
+    python_libraries: list[DatabricksPythonLibrary] = Field(default_factory=list)
     timeout_seconds: int = 86400
