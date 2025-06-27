@@ -54,7 +54,12 @@ class DatabricksPythonLibrary(BaseModel):
         The version of the package.
     infer_version: bool
         Whether to infer the version of the package from the current
-        environment if not specified.
+        environment if not specified explicitly. Defaults to True.
+        It is critical to recognize the Databricks runtime has preinstalled
+        packages so version pinning can lead to an incompatible Databricks
+        runtime.  Alternatively by not pinning, an incompatible version
+        of the dependency could be installed that is not compatible with
+        your code.
     """
     name: str
     repo: Optional[str] = None
