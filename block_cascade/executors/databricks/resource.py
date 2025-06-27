@@ -166,5 +166,27 @@ class DatabricksResource(BaseModel):
     cloud_pickle_by_value: List[str] = Field(default_factory=list)
     cloud_pickle_infer_base_module: bool = True
     task_args: Optional[dict] = None
-    python_libraries: list[DatabricksPythonLibrary] = Field(default_factory=list)
+    python_libraries: list[Union[str, DatabricksPythonLibrary]] = Field(default_factory=list)
     timeout_seconds: int = 86400
+    
+    @model_validator(mode="after")
+    def convert_string_libraries_to_objects(self):
+        """Convert any string library names to DatabricksPythonLibrary objects for backwards compatibility.
+        
+        Supports formats:
+        - "package_name" 
+        - "package_name==version"
+        """
+        converted_libraries = []
+        for lib in self.python_libraries:
+            if isinstance(lib, str):
+                # Parse string to extract name and version if specified
+                if "==" in lib:
+                    name, version = lib.split("==", 1)
+                    converted_libraries.append(DatabricksPythonLibrary(name=name.strip(), version=version.strip()))
+                else:
+                    converted_libraries.append(DatabricksPythonLibrary(name=lib.strip()))
+            else:
+                converted_libraries.append(lib)
+        self.python_libraries = converted_libraries
+        return self
