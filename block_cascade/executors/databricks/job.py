@@ -1,16 +1,15 @@
 """ Data model for task running on Databricks
 """
 from importlib.metadata import version
-from typing import Optional
+from typing import Any, Optional
 
 from block_cascade.executors.databricks.resource import (
     DatabricksAutoscaleConfig,
     DatabricksResource,
+    DatabricksPythonLibrary
 )
 
 from pydantic import BaseModel
-
-ARTIFACTORY = "https://artifactory.global.square/artifactory/api/pypi/block-pypi/simple"
 
 
 class DatabricksJob(BaseModel):
@@ -86,32 +85,17 @@ class DatabricksJob(BaseModel):
             **task_args,
         }
 
-    def _libraries(self):
-        libraries_to_add = []
-
-        python_libraries = self.resource.python_libraries or []
-
-        if "cloudpickle" not in python_libraries:
-            python_libraries.append("cloudpickle")
-        if "prefect" not in python_libraries:
-            python_libraries.append("prefect")
-
-        for package_name in python_libraries:
-            # if the resource construction specifies a version, use that,
-            # otherwise use the version from the environment
-            if "==" in package_name:
-                package = package_name
-            else:
-                package = f"{package_name}=={version(package_name)}"
-            libraries_to_add.append(
-                {
-                    "pypi": {
-                        "package": package,
-                        "repo": ARTIFACTORY,
-                    }
-                }
+    def _libraries(self) -> list[dict[str, Any]]:
+        required_libraries = ("cloudpickle", "prefect")
+        for lib in required_libraries:
+            if any(lib == package.name for package in self.resource.python_libraries):
+                continue
+            self.resource.python_libraries.append(
+                DatabricksPythonLibrary(
+                    name=lib
+                )
             )
-        return libraries_to_add
+        return [package.model_dump() for package in self.resource.python_libraries]
 
     def _cluster_spec(self):
         """
