@@ -79,12 +79,18 @@ def remote(
             - If False: set remote resource to None and fallback to LocalExecutor
         If the flow is running the Prefect Cloud, this argument will have no effect, regardless of the value.
     """
+    logger = get_logger(__name__)
     if not resource:
         resource_configurations = find_default_configuration() or {}
         if config_name:
             resource = resource_configurations.get(config_name)
         elif job_name:
             resource = resource_configurations.get(job_name)
+        else:
+            logger.info(
+            "No resource provided. Specify a resource"
+            " via kwarg when invoking the function."
+        )
 
     remote_args = locals()
     # Support calling this with arguments before using as a decorator, e.g. this
@@ -129,10 +135,6 @@ def remote(
         code_package = remote_args.get("code_package", None)
         web_console_access = remote_args.get("web_console_access", False)
         remote_resource_on_local = remote_args.get('remote_resource_on_local', True)
-
-        # get the prefect logger and flow metadata if available
-        # to determine if this flow is running on the cloud
-        logger = get_logger(__name__)
 
         context = Context()
 

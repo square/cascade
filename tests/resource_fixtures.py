@@ -8,7 +8,10 @@ GCP_PROJECT = "test-project"
 TEST_BUCKET = GCP_PROJECT
 REGION = "us-west1"
 
-chief_machine = GcpMachineConfig("n1-standard-4", 1)
+chief_machine = GcpMachineConfig(
+    type="n1-standard-4",
+    count=1
+)
 gcp_environment = GcpEnvironmentConfig(
     project=GCP_PROJECT,
     storage_location="gs://bucket/path/to/file",
