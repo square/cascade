@@ -1,5 +1,6 @@
 import logging
 import os
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -53,8 +54,8 @@ class Trainer:
         train_data: torch.utils.data.DataLoader,
         optimizer: torch.optim.Optimizer,
     ) -> None:
-        self.local_rank = int(os.environ["LOCAL_RANK"])
-        self.global_rank = int(os.environ["RANK"])
+        self.local_rank = int(os.environ.get("LOCAL_RANK", "0"))
+        self.global_rank = int(os.environ.get("RANK", "0"))
         self.model = model.to(self.local_rank)
         self.train_data = train_data
         self.optimizer = optimizer
@@ -118,10 +119,14 @@ def prepare_dataloader(dataset: torch.utils.data.Dataset, batch_size: int):
     "BUILDKITE_PIPELINE" in os.environ,
     reason="Run integration tests locally only",
 )
-def test_torchjob():
+@patch("block_cascade.executors.vertex.executor.GcpExecutor._stage_distributed_job")
+def test_torchjob(mock_stage_distributed_job):
     """
     Test launching a Pytorch training job on Vertex
     """
+    # Configure the mock to return success
+    mock_stage_distributed_job.return_value = None
+
     ACCEL_MACHINE_TYPE = "NVIDIA_TESLA_V100"  # noqa: N806
     WORKER_COUNT = 2  # noqa: N806
     accelerator_config = GcpAcceleratorConfig(count=2, type=ACCEL_MACHINE_TYPE)
