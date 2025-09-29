@@ -1,7 +1,7 @@
 import importlib.metadata
 import logging
 import os
-from typing import Any, Iterator, List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -129,7 +129,8 @@ class DatabricksResource(BaseModel):
         https://docs.databricks.com/clusters/create-cluster.html
         Get cluster ID from JSON link within cluster info in Databricks UI.
     group_name: str
-        The group name to run as in the databricks instance
+        The group name to run as in the databricks instance. Defaults to using
+	the value of DATABRICKS_GROUP environment variable if present.
         See "access_control_list"."group_name" in Databricks Job's API
         https://docs.databricks.com/api/workspace/jobs/create
     secret : Optional[DatabricksSecret]
@@ -164,7 +165,7 @@ class DatabricksResource(BaseModel):
     cluster_spec_overrides: Optional[dict] = None
     cluster_policy: Optional[str] = None
     existing_cluster_id: Optional[str] = None
-    group_name: str = Field(default_factory=lambda: os.environ.get("DATABRICKS_GROUP", "default-group"))
+    group_name: Optional[str] = None
     secret: Optional[DatabricksSecret] = None
     s3_credentials: Optional[dict] = None
     cloud_pickle_by_value: List[str] = Field(default_factory=list)
@@ -172,6 +173,16 @@ class DatabricksResource(BaseModel):
     task_args: Optional[dict] = None
     python_libraries: list[Union[str, DatabricksPythonLibrary]] = Field(default_factory=list)
     timeout_seconds: int = 86400
+
+    @model_validator(mode="before")
+    @classmethod
+    def maybe_get_group_name_default(cls, data: Any):
+        if not isinstance(data, dict):
+            return data
+        if ("group_name" not in data or data["group_name"] is None) and "DATABRICKS_GROUP" in os.environ:
+            data["group_name"] = os.environ["DATABRICKS_GROUP"]
+            return data
+        raise ValueError("group_name is not set. Either set name directly or set `DATABRICKS_GROUP` env var")
     
     @model_validator(mode="after")
     def convert_string_libraries_to_objects(self):
