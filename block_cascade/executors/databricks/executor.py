@@ -312,11 +312,6 @@ class DatabricksExecutor(Executor):
         if not self._status().is_succesful():
             raise DatabricksError(f"Job {self.name} failed: {self._status().status}")
 
-        # For Unity Catalog Volumes, add a small delay to ensure file is fully written
-        if self.resource.storage_location.startswith("/Volumes/"):
-            self.logger.info("Waiting for output file to be fully written to Unity Catalog...")
-            time.sleep(5)
-        
         return self._result()
 
     def _result(self):
