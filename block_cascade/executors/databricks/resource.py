@@ -95,25 +95,9 @@ class DatabricksResource(BaseModel):
     Parameters
     ----------
     storage_location: str
-       Path to the directory where files will be staged and output written.
-       
-       Choose based on your compute type:
-       
-       FOR SERVERLESS COMPUTE: Unity Catalog Volumes (use_serverless=True)
-         Format: "/Volumes/<catalog>/<schema>/<volume>/<path>/"
-         Example: "/Volumes/main/my_team/cascade/"
-         Benefits:
-           - Required for serverless compute
-           - Proper security and permissions through Unity Catalog governance
-           - Fine-grained access control
-           - Cross-workspace accessibility
-       
-       FOR CLUSTER COMPUTE: S3 (use_serverless=False or traditional clusters)
-         Format: "s3://bucket-name/path/"
-         Requirements:
-           - Requires s3_credentials configuration
-           - Standard for traditional cluster-based jobs
-           - Not compatible with serverless without external location setup
+        Path to the directory where files will be staged and output written.
+        Storage location can be either Unity Catalog Volumes (/Volumes/) or S3 (s3://). Unity Catalog 
+        is required for serverless compute.
     worker_count: Union[int, DatabricksAutoscaleConfig]
         If an integer is supplied, specifies the of workers in Databricks cluster.
         If a `DatabricksAutoscaleConfig` is supplied, specifies the autoscale
