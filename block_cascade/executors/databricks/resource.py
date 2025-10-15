@@ -153,6 +153,11 @@ class DatabricksResource(BaseModel):
         remote task is run.
     timeout_seconds: int = 86400
         The maximum time this job can run for; default is 24 hours.
+    use_serverless: bool = False
+        If True, use Databricks serverless compute instead of provisioning a cluster.
+        When enabled, cluster-related parameters (worker_count, machine, spark_version,
+        cluster_policy, existing_cluster_id) are ignored.
+        See https://docs.databricks.com/api/workspace/jobs/submit for details.
 
     """  # noqa: E501
 
@@ -164,6 +169,7 @@ class DatabricksResource(BaseModel):
     cluster_spec_overrides: Optional[dict] = None
     cluster_policy: Optional[str] = None
     existing_cluster_id: Optional[str] = None
+    use_serverless: bool = False
     group_name: str = Field(default_factory=lambda: os.environ.get("DATABRICKS_GROUP", "default-group"))
     secret: Optional[DatabricksSecret] = None
     s3_credentials: Optional[dict] = None

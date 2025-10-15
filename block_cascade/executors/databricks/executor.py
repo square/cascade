@@ -229,15 +229,21 @@ class DatabricksExecutor(Executor):
         except AttributeError:
             self.name = self.name or "unnamed"
 
+        # Only lookup cluster policy ID if not using serverless
+        if self.resource.use_serverless:
+            cluster_policy_id = None
+        else:
+            cluster_policy_id = self.get_cluster_policy_id_from_policy_name(
+                self.cluster_policy
+            )
+
         return DatabricksJob(
             name=slugify(self.name),
             resource=self.resource,
             storage_path=self.storage_path,
             storage_key=self.storage_key,
             existing_cluster_id=self.resource.existing_cluster_id,
-            cluster_policy_id=self.get_cluster_policy_id_from_policy_name(
-                self.cluster_policy
-            ),
+            cluster_policy_id=cluster_policy_id,
             run_path=self.run_path,
             timeout_seconds=self.resource.timeout_seconds,
         )
