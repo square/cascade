@@ -10,7 +10,6 @@ except ImportError:
 
 import importlib
 import os
-import sys
 import threading
 import time
 import s3fs
@@ -24,6 +23,7 @@ from databricks_cli.sdk.api_client import ApiClient
 from block_cascade.executors.databricks.resource import DatabricksSecret
 from block_cascade.executors.databricks.job import DatabricksJob
 from block_cascade.executors.databricks.resource import DatabricksResource
+from block_cascade.executors.databricks.filesystem import DatabricksFilesystem
 from block_cascade.prefect import get_prefect_logger
 
 from importlib.resources import files
@@ -128,31 +128,60 @@ class DatabricksExecutor(Executor):
     @property
     def fs(self):
         """
-        # refresh this every time to get new (1 hour validity) creds
-        # boto3 client creation is not threadsafe. if multiple DaskExecutor threads
-        # try to call STS to get token at same time, an error is rasied:
-        # `KeyError: 'endpoint_resolver`
-        # wrap in retries:
+        Get the appropriate filesystem for the storage location.
+        
+        - For /Volumes/ paths: Uses DatabricksFilesystem (Unity Catalog Volumes via DBFS API)
+          Required for serverless compute. Provides UC governance and permissions.
+        
+        - For s3:// paths: Uses s3fs.S3FileSystem
+          Required for traditional cluster compute.
+        
+        For S3, credentials are refreshed every time (1 hour validity).
+        boto3 client creation is not threadsafe, so we wrap in retries.
         """
-        wait = 1
-        n_retries = 0
-        while n_retries <= 6:
-            try:
-                if self.resource.s3_credentials is None:
-                    self._fs = s3fs.S3FileSystem()
-                else:
-                    self._fs = s3fs.S3FileSystem(**self.resource.s3_credentials)
-                break
-            except KeyError:
-                self.logger.info(f"Waiting {wait} seconds to retry STS")
-                n_retries += 1
-                time.sleep(wait)
-                wait *= 1.5
-        if self._fs is None:
-            raise RuntimeError(
-                "Failed to initialize S3 filesystem; job pickle cannot be staged."
+        if self._fs is not None:
+            return self._fs
+            
+        storage_loc = self.resource.storage_location
+        
+        # Unity Catalog Volumes - Required for serverless compute
+        if storage_loc.startswith("/Volumes/"):
+            self._fs = DatabricksFilesystem(
+                api_client=self.api_client,
+                auto_mkdir=True
             )
-        return self._fs
+            self.logger.info(f"Using DatabricksFilesystem for Unity Catalog Volumes: {storage_loc}")
+            return self._fs
+        
+        # S3 paths - Required for traditional cluster compute
+        if storage_loc.startswith("s3://"):
+            wait = 1
+            n_retries = 0
+            while n_retries <= 6:
+                try:
+                    if self.resource.s3_credentials is None:
+                        self._fs = s3fs.S3FileSystem()
+                    else:
+                        self._fs = s3fs.S3FileSystem(**self.resource.s3_credentials)
+                    break
+                except KeyError:
+                    self.logger.info(f"Waiting {wait} seconds to retry STS")
+                    n_retries += 1
+                    time.sleep(wait)
+                    wait *= 1.5
+            if self._fs is None:
+                raise RuntimeError(
+                    "Failed to initialize S3 filesystem; job pickle cannot be staged."
+                )
+            return self._fs
+        
+        # Unknown storage type
+        raise ValueError(
+            f"Unsupported storage location: {storage_loc}. "
+            "Must be either:\n"
+            "  - /Volumes/<catalog>/<schema>/<volume>/ (for serverless compute)\n"
+            "  - s3://bucket/path/ (for traditional cluster compute)"
+        )
 
     @fs.setter
     def fs(self, fs):
@@ -218,7 +247,22 @@ class DatabricksExecutor(Executor):
 
     @property
     def run_path(self):
-        return os.path.join(self.storage_path, "run.py")
+        """
+        Get the path where run.py should be stored.
+        
+        For serverless compute: Use /Shared/ path (uploaded to Workspace, referenced without /Workspace/ prefix)
+        For cluster compute: Can be in storage_path (S3 or Volumes)
+        
+        Note: Serverless requires Shared workspace paths WITHOUT the /Workspace/ prefix in job spec,
+        but WITH it for the upload API (handled in _upload_to_workspace).
+        """
+        if self.resource.use_serverless:
+            # Serverless python_file uses /Shared/ (not /Workspace/Shared/)
+            # The upload will add /Workspace/ prefix for the API call
+            return f"/Shared/.cascade/{self.storage_key}/run.py"
+        else:
+            # Traditional cluster compute can use storage location (S3 or Volumes)
+            return os.path.join(self.storage_path, "run.py")
 
     def create_job(self):
         """
@@ -268,11 +312,129 @@ class DatabricksExecutor(Executor):
         if not self._status().is_succesful():
             raise DatabricksError(f"Job {self.name} failed: {self._status().status}")
 
+        # For Unity Catalog Volumes, add a small delay to ensure file is fully written
+        if self.resource.storage_location.startswith("/Volumes/"):
+            self.logger.info("Waiting for output file to be fully written to Unity Catalog...")
+            time.sleep(5)
+        
         return self._result()
 
+    def _result(self):
+        """
+        Override base _result() to add better error logging for Volumes.
+        """
+        self.logger.info(f"Attempting to read result from: {self.output_filepath}")
+        self.logger.info(f"Using filesystem: {type(self.fs).__name__}")
+        
+        try:
+            with self.fs.open(self.output_filepath, "rb") as f:
+                result = cloudpickle.load(f)
+            self.logger.info("Successfully loaded result")
+            
+            # Clean up storage
+            try:
+                self.fs.rm(self.storage_path, recursive=True)
+                self.logger.info(f"Cleaned up storage path: {self.storage_path}")
+            except Exception as e:
+                self.logger.warning(f"Could not clean up storage: {e}")
+                
+        except FileNotFoundError as e:
+            self.logger.error(f"FileNotFoundError details: {e}")
+            raise FileNotFoundError(
+                f"Could not find output file {self.output_filepath}. "
+                f"Original error: {e}"
+            )
+        except Exception as e:
+            self.logger.error(f"Unexpected error reading result: {e}")
+            raise
+            
+        return result
+
+    def _upload_to_workspace(self, local_path: str, workspace_path: str):
+        """
+        Upload a file to Databricks Workspace using the Workspace API.
+        
+        This is required for serverless compute, which cannot access Unity Catalog Volumes
+        for the python_file parameter.
+        
+        Parameters
+        ----------
+        local_path : str
+            Local file path to upload
+        workspace_path : str
+            Workspace path (e.g., /Shared/.cascade/uuid/run.py for serverless)
+        
+        Note
+        ----
+        The Workspace API and job specifications use the SAME path format for serverless:
+        - Both use: /Shared/.cascade/uuid/run.py (no /Workspace/ prefix needed)
+        """
+        import base64
+        
+        # For serverless, the path format is the same for API and job spec
+        # API uses: /Shared/.cascade/uuid/run.py
+        # Job uses: /Shared/.cascade/uuid/run.py
+        api_path = workspace_path
+        
+        self.logger.info(f"Uploading {local_path} to Workspace")
+        self.logger.info(f"  Path: {workspace_path}")
+        
+        # Read local file
+        with open(local_path, "rb") as f:
+            content = f.read()
+        
+        # Base64 encode content
+        content_b64 = base64.b64encode(content).decode('utf-8')
+        
+        # Create parent directory if needed
+        parent_dir = os.path.dirname(api_path)
+        try:
+            self.api_client.perform_query(
+                'POST',
+                '/workspace/mkdirs',
+                data={'path': parent_dir}
+            )
+            self.logger.info(f"Created workspace directory: {parent_dir}")
+        except Exception as e:
+            # Directory may already exist, which is fine
+            self.logger.debug(f"Directory creation result for {parent_dir}: {e}")
+        
+        # Upload file to workspace
+        # Use AUTO format instead of SOURCE to create a regular file, not a notebook
+        try:
+            self.api_client.perform_query(
+                'POST',
+                '/workspace/import',
+                data={
+                    'path': api_path,
+                    'content': content_b64,
+                    'format': 'AUTO',
+                    'overwrite': True
+                }
+            )
+            self.logger.info(f"Successfully uploaded to Workspace: {workspace_path}")
+            
+            # Verify the file was uploaded
+            try:
+                status = self.api_client.perform_query(
+                    'GET',
+                    '/workspace/get-status',
+                    data={'path': api_path}
+                )
+                self.logger.info(f"Verified file exists in Workspace: {status}")
+            except Exception as e:
+                self.logger.warning(f"Could not verify file upload: {e}")
+                
+        except Exception as e:
+            self.logger.error(f"Failed to upload to Workspace {api_path}: {e}")
+            raise RuntimeError(f"Workspace upload failed: {e}")
+    
     def _upload_run_script(self):
-        """Create a script from cascade.executors.databricks.run.py and upload it
-        to s3
+        """
+        Upload run.py bootstrap script.
+        
+        For serverless: Upload to Workspace (serverless can't access Volumes for python_file)
+        For cluster: Upload to storage location (S3 or Volumes)
         """
         run_script = (
             files("block_cascade.executors.databricks")
@@ -280,7 +442,13 @@ class DatabricksExecutor(Executor):
             .resolve()
             .as_posix()
         )
-        self.fs.upload(run_script, self.run_path)
+        
+        if self.resource.use_serverless:
+            # Upload to Databricks Workspace for serverless compatibility
+            self._upload_to_workspace(run_script, self.run_path)
+        else:
+            # Upload to storage location (S3 or Volumes) for cluster compute
+            self.fs.upload(run_script, self.run_path)
 
     def _stage(self):
         """

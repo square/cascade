@@ -76,7 +76,7 @@ class DatabricksJob(BaseModel):
                     "environment_key": "default",
                     "spec": {
                         "dependencies": self._pip_dependencies(),
-                        "environment_version": "1",
+                        "environment_version": self.resource.serverless_environment_version,
                     }
                 }
             ]

@@ -95,8 +95,25 @@ class DatabricksResource(BaseModel):
     Parameters
     ----------
     storage_location: str
-       Path to the directory on s3 where files will be staged and output written
-       cascade needs to have access to this bucket from the execution environment
+       Path to the directory where files will be staged and output written.
+       
+       Choose based on your compute type:
+       
+       FOR SERVERLESS COMPUTE: Unity Catalog Volumes (use_serverless=True)
+         Format: "/Volumes/<catalog>/<schema>/<volume>/<path>/"
+         Example: "/Volumes/main/my_team/cascade/"
+         Benefits:
+           - Required for serverless compute
+           - Proper security and permissions through Unity Catalog governance
+           - Fine-grained access control
+           - Cross-workspace accessibility
+       
+       FOR CLUSTER COMPUTE: S3 (use_serverless=False or traditional clusters)
+         Format: "s3://bucket-name/path/"
+         Requirements:
+           - Requires s3_credentials configuration
+           - Standard for traditional cluster-based jobs
+           - Not compatible with serverless without external location setup
     worker_count: Union[int, DatabricksAutoscaleConfig]
         If an integer is supplied, specifies the of workers in Databricks cluster.
         If a `DatabricksAutoscaleConfig` is supplied, specifies the autoscale
@@ -137,9 +154,11 @@ class DatabricksResource(BaseModel):
         Required to run tasks on Databricks
     s3_credentials: dict
         Credentials to access S3, will be used to initialize S3FileSystem by
-        calling s3fs.S3FileSystem(**s3_credentials),
+        calling s3fs.S3FileSystem(**s3_credentials).
+        Required when storage_location starts with "s3://" (cluster compute).
         If no credentials are provided boto's credential resolver will be used.
         For details see: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html
+        Not needed for Unity Catalog Volumes (/Volumes/, serverless compute).
     cloud_pickle_by_value: list[str]
         List of names of modules to be pickled by value instead of by reference.
     cloudpickle_infer_base_module: bool = True
@@ -158,6 +177,11 @@ class DatabricksResource(BaseModel):
         When enabled, cluster-related parameters (worker_count, machine, spark_version,
         cluster_policy, existing_cluster_id) are ignored.
         See https://docs.databricks.com/api/workspace/jobs/submit for details.
+    serverless_environment_version: str = "1"
+        Serverless environment version. Each version comes with specific Python version
+        and set of preinstalled packages. Default is "1".
+        See https://docs.databricks.com/aws/release-notes/serverless/#serverless-environment-versions
+        Only used when use_serverless=True.
 
     """  # noqa: E501
 
@@ -178,6 +202,7 @@ class DatabricksResource(BaseModel):
     task_args: Optional[dict] = None
     python_libraries: list[Union[str, DatabricksPythonLibrary]] = Field(default_factory=list)
     timeout_seconds: int = 86400
+    serverless_environment_version: str = "1"
     
     @model_validator(mode="after")
     def convert_string_libraries_to_objects(self):
