@@ -323,10 +323,7 @@ class DatabricksExecutor(Executor):
                 result = cloudpickle.load(f)
             
             # Clean up storage
-            try:
-                self.fs.rm(self.storage_path, recursive=True)
-            except Exception as e:
-                self.logger.debug(f"Could not clean up storage: {e}")
+            self.fs.rm(self.storage_path, recursive=True)
                 
         except FileNotFoundError as e:
             self.logger.error(f"Could not read output file: {e}")
@@ -334,9 +331,6 @@ class DatabricksExecutor(Executor):
                 f"Could not find output file {self.output_filepath}. "
                 f"Original error: {e}"
             )
-        except Exception as e:
-            self.logger.error(f"Unexpected error reading result: {e}")
-            raise
             
         return result
 
@@ -373,32 +367,24 @@ class DatabricksExecutor(Executor):
         
         # Create parent directory if needed
         parent_dir = os.path.dirname(api_path)
-        try:
-            self.api_client.perform_query(
-                'POST',
-                '/workspace/mkdirs',
-                data={'path': parent_dir}
-            )
-        except Exception as e:
-            # Directory may already exist, which is fine
-            self.logger.debug(f"Directory creation result for {parent_dir}: {e}")
+        self.api_client.perform_query(
+            'POST',
+            '/workspace/mkdirs',
+            data={'path': parent_dir}
+        )
         
         # Upload file to workspace
         # Use AUTO format instead of SOURCE to create a regular file, not a notebook
-        try:
-            self.api_client.perform_query(
-                'POST',
-                '/workspace/import',
-                data={
-                    'path': api_path,
-                    'content': content_b64,
-                    'format': 'AUTO',
-                    'overwrite': True
-                }
-            )
-        except Exception as e:
-            self.logger.error(f"Failed to upload to Workspace {api_path}: {e}")
-            raise RuntimeError(f"Workspace upload failed: {e}")
+        self.api_client.perform_query(
+            'POST',
+            '/workspace/import',
+            data={
+                'path': api_path,
+                'content': content_b64,
+                'format': 'AUTO',
+                'overwrite': True
+            }
+        )
     
     def _upload_run_script(self):
         """

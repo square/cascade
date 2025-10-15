@@ -65,18 +65,14 @@ class DatabricksFilesystem:
             
         parent_path = os.path.dirname(path)
         if parent_path and parent_path != "/Volumes":
-            try:
-                # Create directory using Files API
-                self.api_client.perform_query(
-                    'PUT',
-                    '/fs/directories' + parent_path,
-                    data=None,
-                    headers={'Content-Type': 'application/json'}
-                )
-                logger.debug(f"Created parent directory: {parent_path}")
-            except Exception as e:
-                # Directory may already exist, which is fine
-                logger.debug(f"Could not create parent directory {parent_path}: {e}")
+            # Create directory using Files API - use session directly (no body)
+            url = self.api_client.get_url('/fs/directories' + parent_path)
+            headers = {
+                'Authorization': self.api_client.default_headers.get('Authorization', '')
+            }
+            response = self.api_client.session.put(url, headers=headers)
+            response.raise_for_status()
+            logger.debug(f"Created parent directory: {parent_path}")
     
     def open(self, path: str, mode: str = "rb") -> BinaryIO:
         """
@@ -99,21 +95,15 @@ class DatabricksFilesystem:
         
         if mode == "rb":
             # Read mode: download file using Files API
-            try:
-                # Download using Files API - use session directly for binary data
-                # perform_query() tries to parse as JSON, but /fs/files returns raw bytes
-                url = self.api_client.get_url('/fs/files' + path)
-                headers = {
-                    'Authorization': self.api_client.default_headers.get('Authorization', '')
-                }
-                response = self.api_client.session.get(url, headers=headers)
-                response.raise_for_status()
-                
-                return io.BytesIO(response.content)
-                
-            except Exception as e:
-                logger.error(f"Failed to read file {path}: {e}")
-                raise FileNotFoundError(f"Could not read file {path}: {e}")
+            # Download using Files API - use session directly for binary data
+            # perform_query() tries to parse as JSON, but /fs/files returns raw bytes
+            url = self.api_client.get_url('/fs/files' + path)
+            headers = {
+                'Authorization': self.api_client.default_headers.get('Authorization', '')
+            }
+            response = self.api_client.session.get(url, headers=headers)
+            response.raise_for_status()
+            return io.BytesIO(response.content)
                 
         elif mode == "wb":
             # Write mode: return a special file object that uploads on close
@@ -140,27 +130,23 @@ class DatabricksFilesystem:
         remote_path = self._normalize_path(remote_path)
         self._ensure_parent_dir(remote_path)
         
-        try:
-            # Read local file
-            with open(local_path, "rb") as f:
-                content = f.read()
-            
-            # Upload using Files API - use session directly for binary data
-            url = self.api_client.get_url('/fs/files' + remote_path)
-            headers = {
-                'Content-Type': 'application/octet-stream',
-                'Authorization': self.api_client.default_headers.get('Authorization', '')
-            }
-            response = self.api_client.session.put(
-                url,
-                data=content,
-                headers=headers,
-                params={'overwrite': str(overwrite).lower()}
-            )
-            response.raise_for_status()
-        except Exception as e:
-            logger.error(f"Failed to upload file {local_path} to {remote_path}: {e}")
-            raise RuntimeError(f"Upload failed: {e}")
+        # Read local file
+        with open(local_path, "rb") as f:
+            content = f.read()
+        
+        # Upload using Files API - use session directly for binary data
+        url = self.api_client.get_url('/fs/files' + remote_path)
+        headers = {
+            'Content-Type': 'application/octet-stream',
+            'Authorization': self.api_client.default_headers.get('Authorization', '')
+        }
+        response = self.api_client.session.put(
+            url,
+            data=content,
+            headers=headers,
+            params={'overwrite': str(overwrite).lower()}
+        )
+        response.raise_for_status()
     
     def rm(self, path: str, recursive: bool = False) -> None:
         """
@@ -175,50 +161,39 @@ class DatabricksFilesystem:
         """
         path = self._normalize_path(path)
         
-        try:
-            if recursive:
-                # For recursive deletion, delete files individually first, then the directory
-                try:
-                    list_url = self.api_client.get_url('/fs/directories' + path)
-                    headers = {
-                        'Authorization': self.api_client.default_headers.get('Authorization', '')
-                    }
-                    list_response = self.api_client.session.get(list_url, headers=headers)
-                    list_response.raise_for_status()
-                    
-                    contents = list_response.json()
-                    files = contents.get('contents', [])
-                    
-                    # Delete each file
-                    for item in files:
-                        item_path = item.get('path')
-                        if item_path:
-                            try:
-                                file_url = self.api_client.get_url('/fs/files' + item_path)
-                                file_response = self.api_client.session.delete(file_url, headers=headers)
-                                file_response.raise_for_status()
-                            except Exception:
-                                pass  # File may already be deleted
-                    
-                    # Delete the empty directory
-                    dir_url = self.api_client.get_url('/fs/directories' + path)
-                    dir_response = self.api_client.session.delete(dir_url, headers=headers)
-                    dir_response.raise_for_status()
-                    
-                except Exception:
-                    # Directory might already be empty or not exist, which is fine
-                    pass
-            else:
-                # Use files API for single file deletion
-                url = self.api_client.get_url('/fs/files' + path)
-                headers = {
-                    'Authorization': self.api_client.default_headers.get('Authorization', '')
-                }
-                response = self.api_client.session.delete(url, headers=headers)
-                response.raise_for_status()
-        except Exception:
-            # Don't raise - deletion failures shouldn't break the workflow
-            pass
+        if recursive:
+            # For recursive deletion, delete files individually first, then the directory
+            list_url = self.api_client.get_url('/fs/directories' + path)
+            headers = {
+                'Authorization': self.api_client.default_headers.get('Authorization', '')
+            }
+            list_response = self.api_client.session.get(list_url, headers=headers)
+            list_response.raise_for_status()
+            
+            contents = list_response.json()
+            files = contents.get('contents', [])
+            
+            # Delete each file
+            for item in files:
+                item_path = item.get('path')
+                if item_path:
+                    file_url = self.api_client.get_url('/fs/files' + item_path)
+                    file_response = self.api_client.session.delete(file_url, headers=headers)
+                    file_response.raise_for_status()
+            
+            # Delete the empty directory
+            dir_url = self.api_client.get_url('/fs/directories' + path)
+            dir_response = self.api_client.session.delete(dir_url, headers=headers)
+            dir_response.raise_for_status()
+                
+        else:
+            # Use files API for single file deletion
+            url = self.api_client.get_url('/fs/files' + path)
+            headers = {
+                'Authorization': self.api_client.default_headers.get('Authorization', '')
+            }
+            response = self.api_client.session.delete(url, headers=headers)
+            response.raise_for_status()
 
 
 class _DatabricksUploadFile(io.BytesIO):
@@ -257,10 +232,6 @@ class _DatabricksUploadFile(io.BytesIO):
                 params={'overwrite': 'true'}
             )
             response.raise_for_status()
-            
-        except Exception as e:
-            logger.error(f"Failed to upload to {self.remote_path}: {e}")
-            raise RuntimeError(f"Upload failed: {e}")
         finally:
             self._closed = True
             super().close()
