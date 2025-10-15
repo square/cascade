@@ -50,14 +50,6 @@ class DatabricksFilesystem:
         self.api_client = api_client
         self.auto_mkdir = auto_mkdir
     
-    def _normalize_path(self, path: str) -> str:
-        """Normalize the path for Unity Catalog Volumes."""
-        # Unity Catalog Volumes paths should start with /Volumes/
-        if not path.startswith("/Volumes/"):
-            if path.startswith("dbfs:/Volumes/"):
-                path = path.replace("dbfs:", "")
-        return path
-    
     def _ensure_parent_dir(self, path: str) -> None:
         """Ensure parent directory exists if auto_mkdir is enabled."""
         if not self.auto_mkdir:
@@ -91,7 +83,6 @@ class DatabricksFilesystem:
         BinaryIO
             File-like object for reading/writing
         """
-        path = self._normalize_path(path)
         
         if mode == "rb":
             # Read mode: download file using Files API
@@ -127,7 +118,6 @@ class DatabricksFilesystem:
         overwrite : bool
             Whether to overwrite existing file
         """
-        remote_path = self._normalize_path(remote_path)
         self._ensure_parent_dir(remote_path)
         
         # Read local file
@@ -159,7 +149,6 @@ class DatabricksFilesystem:
         recursive : bool
             If True, delete directory and all its contents
         """
-        path = self._normalize_path(path)
         
         if recursive:
             # For recursive deletion, delete files individually first, then the directory
