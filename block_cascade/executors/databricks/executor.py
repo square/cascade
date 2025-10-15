@@ -321,25 +321,20 @@ class DatabricksExecutor(Executor):
 
     def _result(self):
         """
-        Override base _result() to add better error logging for Volumes.
+        Override base _result() to add better error handling for Volumes.
         """
-        self.logger.info(f"Attempting to read result from: {self.output_filepath}")
-        self.logger.info(f"Using filesystem: {type(self.fs).__name__}")
-        
         try:
             with self.fs.open(self.output_filepath, "rb") as f:
                 result = cloudpickle.load(f)
-            self.logger.info("Successfully loaded result")
             
             # Clean up storage
             try:
                 self.fs.rm(self.storage_path, recursive=True)
-                self.logger.info(f"Cleaned up storage path: {self.storage_path}")
             except Exception as e:
-                self.logger.warning(f"Could not clean up storage: {e}")
+                self.logger.debug(f"Could not clean up storage: {e}")
                 
         except FileNotFoundError as e:
-            self.logger.error(f"FileNotFoundError details: {e}")
+            self.logger.error(f"Could not read output file: {e}")
             raise FileNotFoundError(
                 f"Could not find output file {self.output_filepath}. "
                 f"Original error: {e}"
@@ -372,12 +367,7 @@ class DatabricksExecutor(Executor):
         import base64
         
         # For serverless, the path format is the same for API and job spec
-        # API uses: /Shared/.cascade/uuid/run.py
-        # Job uses: /Shared/.cascade/uuid/run.py
         api_path = workspace_path
-        
-        self.logger.info(f"Uploading {local_path} to Workspace")
-        self.logger.info(f"  Path: {workspace_path}")
         
         # Read local file
         with open(local_path, "rb") as f:
@@ -394,7 +384,6 @@ class DatabricksExecutor(Executor):
                 '/workspace/mkdirs',
                 data={'path': parent_dir}
             )
-            self.logger.info(f"Created workspace directory: {parent_dir}")
         except Exception as e:
             # Directory may already exist, which is fine
             self.logger.debug(f"Directory creation result for {parent_dir}: {e}")
@@ -412,19 +401,6 @@ class DatabricksExecutor(Executor):
                     'overwrite': True
                 }
             )
-            self.logger.info(f"Successfully uploaded to Workspace: {workspace_path}")
-            
-            # Verify the file was uploaded
-            try:
-                status = self.api_client.perform_query(
-                    'GET',
-                    '/workspace/get-status',
-                    data={'path': api_path}
-                )
-                self.logger.info(f"Verified file exists in Workspace: {status}")
-            except Exception as e:
-                self.logger.warning(f"Could not verify file upload: {e}")
-                
         except Exception as e:
             self.logger.error(f"Failed to upload to Workspace {api_path}: {e}")
             raise RuntimeError(f"Workspace upload failed: {e}")
