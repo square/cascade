@@ -8,6 +8,7 @@ try:
 except ImportError:
     import pickle as cloudpickle  # Databricks renames cloudpickle to pickle in Runtimes 11 +  # noqa: E501
 
+import base64
 import importlib
 import os
 import threading
@@ -353,8 +354,6 @@ class DatabricksExecutor(Executor):
         The Workspace API and job specifications use the SAME path format for serverless:
         - Both use: /Shared/.cascade/uuid/run.py (no /Workspace/ prefix needed)
         """
-        import base64
-        
         # For serverless, the path format is the same for API and job spec
         api_path = workspace_path
         
