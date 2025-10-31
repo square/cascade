@@ -161,9 +161,9 @@ class DatabricksResource(BaseModel):
         When enabled, cluster-related parameters (worker_count, machine, spark_version,
         cluster_policy, existing_cluster_id) are ignored.
         See https://docs.databricks.com/api/workspace/jobs/submit for details.
-    serverless_environment_version: str = "1"
+    serverless_environment_version: str = "3"
         Serverless environment version. Each version comes with specific Python version
-        and set of preinstalled packages. Default is "1".
+        and set of preinstalled packages. Default is "3".
         See https://docs.databricks.com/aws/release-notes/serverless/#serverless-environment-versions
         Only used when use_serverless=True.
 
@@ -186,7 +186,7 @@ class DatabricksResource(BaseModel):
     task_args: Optional[dict] = None
     python_libraries: list[Union[str, DatabricksPythonLibrary]] = Field(default_factory=list)
     timeout_seconds: int = 86400
-    serverless_environment_version: str = "1"
+    serverless_environment_version: str = "3"
     
     @model_validator(mode="after")
     def convert_string_libraries_to_objects(self):
