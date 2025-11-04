@@ -1,6 +1,6 @@
 """ Data model for task running on Databricks
 """
-from importlib.metadata import version
+import logging
 from typing import Any, Optional
 
 from block_cascade.executors.databricks.resource import (
@@ -10,6 +10,8 @@ from block_cascade.executors.databricks.resource import (
 )
 
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class DatabricksJob(BaseModel):
@@ -90,6 +92,13 @@ class DatabricksJob(BaseModel):
             if task_args.get("libraries") is None:
                 task_args["libraries"] = []
             task_args["libraries"].extend(self._libraries())
+        elif self.existing_cluster_id and self.resource.use_serverless:
+            # Log warning if both existing_cluster_id and use_serverless are set
+            # This should be caught by validation, but adding defensive check
+            logger.warning(
+                "Both existing_cluster_id and use_serverless are set. "
+                "Serverless mode takes precedence; existing_cluster_id will be ignored."
+            )
 
         task_spec = {
             "task_key": f"{self.name[:32]}---{self.name[-32:]}",
@@ -137,14 +146,7 @@ class DatabricksJob(BaseModel):
             )
         
         # Convert DatabricksPythonLibrary objects to pip requirement strings
-        dependencies = []
-        for package in self.resource.python_libraries:
-            if package.version:
-                dependencies.append(f"{package.name}=={package.version}")
-            else:
-                dependencies.append(package.name)
-        
-        return dependencies
+        return [str(package) for package in self.resource.python_libraries]
 
     def _cluster_spec(self):
         """

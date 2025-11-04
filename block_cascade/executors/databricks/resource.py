@@ -79,8 +79,12 @@ class DatabricksPythonLibrary(BaseModel):
                 )
         return self
 
+    def __str__(self) -> str:
+        """Convert to pip requirement string format."""
+        return f"{self.name}=={self.version}" if self.version else self.name
+
     def model_dump(self, **kwargs) -> dict:
-        package_specififer = f"{self.name}=={self.version}" if self.version else self.name
+        package_specififer = str(self)
         return {
             "pypi": {
                 "package": package_specififer,
@@ -208,4 +212,24 @@ class DatabricksResource(BaseModel):
             else:
                 converted_libraries.append(lib)
         self.python_libraries = converted_libraries
+        return self
+    
+    @model_validator(mode="after")
+    def validate_serverless_configuration(self):
+        """Validate serverless vs cluster configuration parameters."""
+        if self.use_serverless:
+            # Validate storage location for serverless
+            if not self.storage_location.startswith("/Volumes/"):
+                logger.warning(
+                    f"Serverless compute is enabled but storage_location is '{self.storage_location}'. "
+                    "Serverless compute requires Unity Catalog Volumes (format: /Volumes/<catalog>/<schema>/<volume>/). "
+                    "This may cause the job to fail."
+                )
+            
+            # Warn if existing_cluster_id is set (will be ignored)
+            if self.existing_cluster_id:
+                logger.info(
+                    "Serverless compute is enabled. The existing_cluster_id parameter will be ignored."
+                )
+        
         return self
