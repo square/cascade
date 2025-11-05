@@ -3,7 +3,7 @@ name = "block-cascade"
 packages = [
     {include = "block_cascade"}
 ]
-version = "2.10.2"
+version = "2.11.0"
 description = "Library for model training in multi-cloud environment."
 readme = "README.md"
 authors = ["Block"]
