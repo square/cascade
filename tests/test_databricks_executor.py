@@ -114,7 +114,7 @@ def test_serverless_job_creation():
     assert "spec" in env
     assert "dependencies" in env["spec"]
     assert "environment_version" in env["spec"]
-    assert env["spec"]["environment_version"] == "1"
+    assert env["spec"]["environment_version"] == "3"
     
     # Verify dependencies include required libraries
     dependencies = env["spec"]["dependencies"]
