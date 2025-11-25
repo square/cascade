@@ -19,6 +19,7 @@ DATABRICKS_GROUP = "cascade"
 databricks_resource = DatabricksResource(
     storage_location="s3://test-bucket/cascade",
     group_name=DATABRICKS_GROUP,
+    spark_version="11.3.x-scala2.12",
 )
 
 

@@ -112,7 +112,6 @@ class DatabricksResource(BaseModel):
     spark_version: str
         Databricks runtime version. Tested on 11.3.x-scala2.12.
         https://docs.databricks.com/release-notes/runtime/releases.html
-        Default is 11.3.x-scala2.12
     data_security_mode: Optional[str]
         See `data_security_mode` at
         https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-attribute-paths
@@ -176,7 +175,7 @@ class DatabricksResource(BaseModel):
     storage_location: str
     worker_count: Union[int, DatabricksAutoscaleConfig] = 1
     machine: str = "i3.xlarge"
-    spark_version: str = "11.3.x-scala2.12"
+    spark_version: str
     data_security_mode: Optional[str] = "SINGLE_USER"
     cluster_spec_overrides: Optional[dict] = None
     cluster_policy: Optional[str] = None
