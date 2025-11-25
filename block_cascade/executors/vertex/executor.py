@@ -18,14 +18,22 @@ from block_cascade.executors.vertex.job import VertexJob
 from block_cascade.executors.vertex.resource import GcpResource
 from block_cascade.executors.vertex.tune import Tune, TuneResult
 from block_cascade.gcp.monitoring import log_quotas_for_resource
-from block_cascade.utils import PREFECT_VERSION, maybe_convert
+from block_cascade.utils import maybe_convert, get_logger
 
 
-if PREFECT_VERSION == 3:
-    from block_cascade.prefect.v3 import get_current_deployment, get_storage_block
-elif PREFECT_VERSION == 2:
-    from block_cascade.prefect.v2 import get_current_deployment, get_storage_block
-else:
+logger = get_logger(__name__)
+
+
+try:
+    from block_cascade.prefect import PREFECT_VERSION
+    if PREFECT_VERSION == 3:
+        from block_cascade.prefect.v3 import get_current_deployment, get_storage_block
+    elif PREFECT_VERSION == 2:
+        from block_cascade.prefect.v2 import get_current_deployment, get_storage_block
+    else:
+        get_storage_block = None
+        get_current_deployment = None
+except ImportError:
     get_storage_block = None
     get_current_deployment = None
 

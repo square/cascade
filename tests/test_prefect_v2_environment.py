@@ -5,8 +5,8 @@ from prefect.client.schemas.responses import DeploymentResponse
 
 @pytest.fixture
 def prefect_environment_client(mock_infrastructure_block, mock_deployment_response):
-    with patch("block_cascade.utils.PREFECT_VERSION", 2), \
-         patch("block_cascade.utils.PREFECT_SUBVERSION", 8), \
+    with patch("block_cascade.prefect.v2.environment.PREFECT_VERSION", 2), \
+         patch("block_cascade.prefect.v2.environment.PREFECT_SUBVERSION", 8), \
          patch("prefect.runtime.deployment.id", "mock-deployment-id"), \
          patch("block_cascade.prefect.v2.environment._fetch_block", return_value=mock_infrastructure_block), \
          patch("block_cascade.prefect.v2.environment._fetch_deployment", return_value=mock_deployment_response):

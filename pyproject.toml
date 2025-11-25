@@ -19,9 +19,10 @@ google-cloud-aiplatform = "^1.39.0"
 google-cloud-monitoring = "^2.16.0"
 google-cloud-resource-manager = "^1.10.4"
 importlib_resources = {version="*", python="<3.9"}
-prefect = ">=2.0,<4.0.0"
+prefect = {optional = true, version = ">=2.0,<4.0.0" }
 pydantic = ">=2.0.0,<3.0.0"
 s3fs = ">=2024"
+slugify = "^0.0.1"
 
 [tool.poetry.group.torch.dependencies]
 torch = ">=1.13.1"
@@ -33,6 +34,9 @@ pytest-env = "^0.8.1"
 pytest-mock = "^3.11.1"
 dask = {extras = ["distributed"], version = ">=2022"}
 pyfakefs = "<5.3"
+
+[tool.poetry.extras]
+prefect = ["prefect"]
 
 [[source]]
 name = "pypi"

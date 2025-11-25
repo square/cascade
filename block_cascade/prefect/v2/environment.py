@@ -4,7 +4,7 @@ from prefect import runtime
 
 from block_cascade.concurrency import run_async
 from block_cascade.gcp import VertexAIEnvironmentInfoProvider
-from block_cascade.utils import PREFECT_SUBVERSION, PREFECT_VERSION
+from block_cascade.prefect.version import PREFECT_SUBVERSION, PREFECT_VERSION
 
 if (PREFECT_SUBVERSION <= 7) & (PREFECT_VERSION < 3):
     from prefect.orion.schemas.core import BlockDocument
