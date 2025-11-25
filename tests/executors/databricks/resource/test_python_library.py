@@ -32,6 +32,7 @@ def test_databricks_resource_string_library_conversion():
     
     resource = DatabricksResource(
         storage_location="s3://test-bucket/cascade",
+        spark_version="11.3.x-scala2.12",
         python_libraries=["test-package"]
     )
     
@@ -41,8 +42,9 @@ def test_databricks_resource_string_library_conversion():
     
     resource = DatabricksResource(
         storage_location="s3://test-bucket/cascade",
+        spark_version="11.3.x-scala2.12",
         python_libraries=[
-            "package1", 
+            "package1",
             DatabricksPythonLibrary(name="package2", version="1.0.0")
         ]
     )
@@ -60,6 +62,7 @@ def test_databricks_resource_string_with_version_conversion():
     
     resource = DatabricksResource(
         storage_location="s3://test-bucket/cascade",
+        spark_version="11.3.x-scala2.12",
         python_libraries=["cloudpickle==0.10.0"]
     )
     
@@ -70,6 +73,7 @@ def test_databricks_resource_string_with_version_conversion():
     
     resource = DatabricksResource(
         storage_location="s3://test-bucket/cascade",
+        spark_version="11.3.x-scala2.12",
         python_libraries=[
             "numpy==1.22.4",
             "pandas==2.0.0",
