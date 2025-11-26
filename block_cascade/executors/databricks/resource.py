@@ -109,9 +109,10 @@ class DatabricksResource(BaseModel):
     machine: str
         AWS machine type for worker nodes. See https://www.databricks.com/product/aws-pricing/instance-types
         Default is i3.xlarge (4 vCPUs, 31 GB RAM)
-    spark_version: str
-        Databricks runtime version. Tested on 11.3.x-scala2.12.
+    spark_version: Optional[str]
+        Databricks runtime version.
         https://docs.databricks.com/release-notes/runtime/releases.html
+        Required when use_serverless=False. Must not be set when use_serverless=True.
     data_security_mode: Optional[str]
         See `data_security_mode` at
         https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-attribute-paths
@@ -175,7 +176,7 @@ class DatabricksResource(BaseModel):
     storage_location: str
     worker_count: Union[int, DatabricksAutoscaleConfig] = 1
     machine: str = "i3.xlarge"
-    spark_version: str
+    spark_version: Optional[str] = None
     data_security_mode: Optional[str] = "SINGLE_USER"
     cluster_spec_overrides: Optional[dict] = None
     cluster_policy: Optional[str] = None
@@ -229,6 +230,20 @@ class DatabricksResource(BaseModel):
             if self.existing_cluster_id:
                 logger.info(
                     "Serverless compute is enabled. The existing_cluster_id parameter will be ignored."
+                )
+            
+            # Validate spark_version is not set for serverless
+            if self.spark_version is not None:
+                raise ValueError(
+                    "spark_version must not be set when use_serverless=True. "
+                    "Serverless compute runtime version is specified by serverless_environment_version."
+                )
+        else:
+            # Validate spark_version is set for cluster compute
+            if self.spark_version is None:
+                raise ValueError(
+                    "spark_version is required when use_serverless=False. "
+                    "Please specify a Databricks runtime version (e.g., '17.3.x-scala2.13')."
                 )
         
         return self
