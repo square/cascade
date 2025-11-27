@@ -1,6 +1,6 @@
 """ Data model for task running on Databricks
 """
-from importlib.metadata import version
+import logging
 from typing import Any, Optional
 
 from block_cascade.executors.databricks.resource import (
@@ -10,6 +10,8 @@ from block_cascade.executors.databricks.resource import (
 )
 
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class DatabricksJob(BaseModel):
@@ -43,17 +45,20 @@ class DatabricksJob(BaseModel):
     storage_path: str
     storage_key: str
     run_path: str
-    cluster_policy_id: str
+    cluster_policy_id: Optional[str] = None
     existing_cluster_id: Optional[str] = None
     timeout_seconds: int = 86400
 
     def create_payload(self):
         """"""
         task = self._task_spec()
-        task.update({"existing_cluster_id": self.existing_cluster_id})
-        task.update({"new_cluster": self._cluster_spec()})
+        
+        # Only add cluster configuration if not using serverless
+        if not self.resource.use_serverless:
+            task.update({"existing_cluster_id": self.existing_cluster_id})
+            task.update({"new_cluster": self._cluster_spec()})
 
-        return {
+        payload = {
             "tasks": [task],
             "run_name": self.name,
             "timeout_seconds": self.timeout_seconds,
@@ -66,15 +71,36 @@ class DatabricksJob(BaseModel):
             ],
         }
 
+        # Add environments configuration for serverless at job level
+        if self.resource.use_serverless:
+            payload["environments"] = [
+                {
+                    "environment_key": "default",
+                    "spec": {
+                        "dependencies": self._pip_dependencies(),
+                        "environment_version": self.resource.serverless_environment_version,
+                    }
+                }
+            ]
+
+        return payload
+
     def _task_spec(self):
         task_args = self.resource.task_args or {}
 
-        if self.existing_cluster_id is None:
+        if self.existing_cluster_id is None and not self.resource.use_serverless:
             if task_args.get("libraries") is None:
                 task_args["libraries"] = []
             task_args["libraries"].extend(self._libraries())
+        elif self.existing_cluster_id and self.resource.use_serverless:
+            # Log warning if both existing_cluster_id and use_serverless are set
+            # This should be caught by validation, but adding defensive check
+            logger.warning(
+                "Both existing_cluster_id and use_serverless are set. "
+                "Serverless mode takes precedence; existing_cluster_id will be ignored."
+            )
 
-        return {
+        task_spec = {
             "task_key": f"{self.name[:32]}---{self.name[-32:]}",
             "description": "A function submitted from Cascade",
             "depends_on": [],
@@ -84,6 +110,13 @@ class DatabricksJob(BaseModel):
             },
             **task_args,
         }
+
+        # Add environment_key for serverless compute
+        # The environment is defined at the job level in create_payload()
+        if self.resource.use_serverless:
+            task_spec["environment_key"] = "default"
+
+        return task_spec
 
     def _libraries(self) -> list[dict[str, Any]]:
         required_libraries = ("cloudpickle", "prefect")
@@ -97,12 +130,30 @@ class DatabricksJob(BaseModel):
             )
         return [package.model_dump() for package in self.resource.python_libraries]
 
+    def _pip_dependencies(self) -> list[str]:
+        """
+        Convert python libraries to pip dependency strings for serverless environments.
+        Returns a list of pip requirement specifiers.
+        """
+        required_libraries = ("cloudpickle", "prefect")
+        for lib in required_libraries:
+            if any(lib == package.name for package in self.resource.python_libraries):
+                continue
+            self.resource.python_libraries.append(
+                DatabricksPythonLibrary(
+                    name=lib
+                )
+            )
+        
+        # Convert DatabricksPythonLibrary objects to pip requirement strings
+        return [str(package) for package in self.resource.python_libraries]
+
     def _cluster_spec(self):
         """
         Creates a cluster spec for a Databricks job from the resource object
         passed to the DatabricksJobConfig object.
         """
-        if self.existing_cluster_id:
+        if self.existing_cluster_id or self.resource.use_serverless:
             return None
         else:
             cluster_spec = {

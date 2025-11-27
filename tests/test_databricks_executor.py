@@ -70,3 +70,57 @@ def test_infer_name(mock_cluster_policy):
     assert executor_partialfunc.name is None
     _ = executor_partialfunc.create_job()
     assert executor_partialfunc.name == "unnamed"
+
+
+def test_serverless_job_creation():
+    """Test that a serverless job is created correctly without cluster configuration."""
+    serverless_resource = DatabricksResource(
+        storage_location="s3://test-bucket/cascade",
+        group_name=DATABRICKS_GROUP,
+        use_serverless=True,
+        python_libraries=["pandas", "numpy"],
+    )
+    
+    executor = DatabricksExecutor(
+        func=addition_packed,
+        resource=serverless_resource,
+    )
+    
+    # Should not require cluster policy lookup for serverless
+    databricks_job = executor.create_job()
+    assert isinstance(databricks_job, DatabricksJob)
+    assert databricks_job.cluster_policy_id is None
+    
+    # Verify the payload structure
+    payload = databricks_job.create_payload()
+    task = payload["tasks"][0]
+    
+    # Task should reference environment by key
+    assert "environment_key" in task
+    assert task["environment_key"] == "default"
+    
+    # Task should NOT have cluster configuration
+    assert task.get("existing_cluster_id") is None
+    assert task.get("new_cluster") is None
+    
+    # Libraries should NOT be at task level for serverless
+    assert "libraries" not in task or len(task.get("libraries", [])) == 0
+    
+    # Environments should be defined at job level
+    assert "environments" in payload
+    assert len(payload["environments"]) == 1
+    
+    env = payload["environments"][0]
+    assert env["environment_key"] == "default"
+    assert "spec" in env
+    assert "dependencies" in env["spec"]
+    assert "environment_version" in env["spec"]
+    assert env["spec"]["environment_version"] == "3"
+    
+    # Verify dependencies include required libraries
+    dependencies = env["spec"]["dependencies"]
+    assert isinstance(dependencies, list)
+    assert any("cloudpickle" in dep for dep in dependencies)
+    assert any("prefect" in dep for dep in dependencies)
+    assert any("pandas" in dep for dep in dependencies)
+    assert any("numpy" in dep for dep in dependencies)

@@ -79,8 +79,12 @@ class DatabricksPythonLibrary(BaseModel):
                 )
         return self
 
+    def __str__(self) -> str:
+        """Convert to pip requirement string format."""
+        return f"{self.name}=={self.version}" if self.version else self.name
+
     def model_dump(self, **kwargs) -> dict:
-        package_specififer = f"{self.name}=={self.version}" if self.version else self.name
+        package_specififer = str(self)
         return {
             "pypi": {
                 "package": package_specififer,
@@ -95,8 +99,9 @@ class DatabricksResource(BaseModel):
     Parameters
     ----------
     storage_location: str
-       Path to the directory on s3 where files will be staged and output written
-       cascade needs to have access to this bucket from the execution environment
+        Path to the directory where files will be staged and output written.
+        Storage location can be either Unity Catalog Volumes (/Volumes/) or S3 (s3://). Unity Catalog 
+        is required for serverless compute.
     worker_count: Union[int, DatabricksAutoscaleConfig]
         If an integer is supplied, specifies the of workers in Databricks cluster.
         If a `DatabricksAutoscaleConfig` is supplied, specifies the autoscale
@@ -104,9 +109,10 @@ class DatabricksResource(BaseModel):
     machine: str
         AWS machine type for worker nodes. See https://www.databricks.com/product/aws-pricing/instance-types
         Default is i3.xlarge (4 vCPUs, 31 GB RAM)
-    spark_version: str
-        Databricks runtime version. Tested on 11.3.x-scala2.12.
+    spark_version: Optional[str]
+        Databricks runtime version.
         https://docs.databricks.com/release-notes/runtime/releases.html
+        Required when use_serverless=False. Must not be set when use_serverless=True.
     data_security_mode: Optional[str]
         See `data_security_mode` at
         https://docs.databricks.com/administration-guide/clusters/policies.html#cluster-policy-attribute-paths
@@ -136,9 +142,11 @@ class DatabricksResource(BaseModel):
         Required to run tasks on Databricks
     s3_credentials: dict
         Credentials to access S3, will be used to initialize S3FileSystem by
-        calling s3fs.S3FileSystem(**s3_credentials),
+        calling s3fs.S3FileSystem(**s3_credentials).
+        Required when storage_location starts with "s3://" (cluster compute).
         If no credentials are provided boto's credential resolver will be used.
         For details see: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html
+        Not needed for Unity Catalog Volumes (/Volumes/, serverless compute).
     cloud_pickle_by_value: list[str]
         List of names of modules to be pickled by value instead of by reference.
     cloudpickle_infer_base_module: bool = True
@@ -152,17 +160,28 @@ class DatabricksResource(BaseModel):
         remote task is run.
     timeout_seconds: int = 86400
         The maximum time this job can run for; default is 24 hours.
+    use_serverless: bool = False
+        If True, use Databricks serverless compute instead of provisioning a cluster.
+        When enabled, cluster-related parameters (worker_count, machine, spark_version,
+        cluster_policy, existing_cluster_id) are ignored.
+        See https://docs.databricks.com/api/workspace/jobs/submit for details.
+    serverless_environment_version: str = "3"
+        Serverless environment version. Each version comes with specific Python version
+        and set of preinstalled packages. Default is "3".
+        See https://docs.databricks.com/aws/release-notes/serverless/#serverless-environment-versions
+        Only used when use_serverless=True.
 
     """  # noqa: E501
 
     storage_location: str
     worker_count: Union[int, DatabricksAutoscaleConfig] = 1
     machine: str = "i3.xlarge"
-    spark_version: str
+    spark_version: Optional[str] = None
     data_security_mode: Optional[str] = "SINGLE_USER"
     cluster_spec_overrides: Optional[dict] = None
     cluster_policy: Optional[str] = None
     existing_cluster_id: Optional[str] = None
+    use_serverless: bool = False
     group_name: str = Field(default_factory=lambda: os.environ.get("DATABRICKS_GROUP", "default-group"))
     secret: Optional[DatabricksSecret] = None
     s3_credentials: Optional[dict] = None
@@ -171,6 +190,7 @@ class DatabricksResource(BaseModel):
     task_args: Optional[dict] = None
     python_libraries: list[Union[str, DatabricksPythonLibrary]] = Field(default_factory=list)
     timeout_seconds: int = 86400
+    serverless_environment_version: str = "3"
     
     @model_validator(mode="after")
     def convert_string_libraries_to_objects(self):
@@ -192,4 +212,38 @@ class DatabricksResource(BaseModel):
             else:
                 converted_libraries.append(lib)
         self.python_libraries = converted_libraries
+        return self
+    
+    @model_validator(mode="after")
+    def validate_serverless_configuration(self):
+        """Validate serverless vs cluster configuration parameters."""
+        if self.use_serverless:
+            # Validate storage location for serverless
+            if not self.storage_location.startswith("/Volumes/"):
+                logger.warning(
+                    f"Serverless compute is enabled but storage_location is '{self.storage_location}'. "
+                    "Serverless compute requires Unity Catalog Volumes (format: /Volumes/<catalog>/<schema>/<volume>/). "
+                    "This may cause the job to fail."
+                )
+            
+            # Warn if existing_cluster_id is set (will be ignored)
+            if self.existing_cluster_id:
+                logger.info(
+                    "Serverless compute is enabled. The existing_cluster_id parameter will be ignored."
+                )
+            
+            # Validate spark_version is not set for serverless
+            if self.spark_version is not None:
+                raise ValueError(
+                    "spark_version must not be set when use_serverless=True. "
+                    "Serverless compute runtime version is specified by serverless_environment_version."
+                )
+        else:
+            # Validate spark_version is set for cluster compute
+            if self.spark_version is None:
+                raise ValueError(
+                    "spark_version is required when use_serverless=False. "
+                    "Please specify a Databricks runtime version (e.g., '17.3.x-scala2.13')."
+                )
+        
         return self
