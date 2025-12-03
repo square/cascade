@@ -102,6 +102,7 @@ class DatabricksResource(BaseModel):
         Path to the directory where files will be staged and output written.
         Storage location can be either Unity Catalog Volumes (/Volumes/) or S3 (s3://). Unity Catalog 
         is required for serverless compute.
+        This format for Unity Catalog Volumes is: /Volumes/<catalog>/<schema>/<volume>
     worker_count: Union[int, DatabricksAutoscaleConfig]
         If an integer is supplied, specifies the of workers in Databricks cluster.
         If a `DatabricksAutoscaleConfig` is supplied, specifies the autoscale
