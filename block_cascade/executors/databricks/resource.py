@@ -235,15 +235,15 @@ class DatabricksResource(BaseModel):
             # Validate spark_version is not set for serverless
             if self.spark_version is not None:
                 raise ValueError(
-                    "spark_version must not be set when use_serverless=True. "
-                    "Serverless compute runtime version is specified by serverless_environment_version."
+                    "spark_version is not applicable for serverless compute"
                 )
         else:
             # Validate spark_version is set for cluster compute
             if self.spark_version is None:
                 raise ValueError(
-                    "spark_version is required when use_serverless=False. "
+                    "spark_version must set for cluster compute. "
                     "Please specify a Databricks runtime version (e.g., '17.3.x-scala2.13')."
+                    "Note: for Serverless compute, set use_serverless and specify serverless_environment_version."
                 )
         
         return self

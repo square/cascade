@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main  
-      - nkpart:nkpart.add-serverless-support
 
 jobs:
   deploy:
