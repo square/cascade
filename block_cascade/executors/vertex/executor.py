@@ -8,8 +8,8 @@ from typing import Callable, Mapping, Optional, Union
 
 import cloudpickle
 import gcsfs
-from google.cloud import aiplatform_v1beta1 as aiplatform
-from google.cloud.aiplatform_v1beta1.types import job_state
+from google.cloud import aiplatform_v1 as aiplatform
+from google.cloud.aiplatform_v1.types import job_state
 
 from block_cascade.concurrency import run_async
 from block_cascade.executors.executor import Executor
