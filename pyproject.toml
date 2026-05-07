@@ -3,7 +3,7 @@ name = "block-cascade"
 packages = [
     {include = "block_cascade"}
 ]
-version = "3.2.0"
+version = "3.2.1"
 description = "Library for model training in multi-cloud environment."
 readme = "README.md"
 authors = ["Block"]
@@ -11,7 +11,7 @@ authors = ["Block"]
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
 cloudml-hypertune = "==0.1.0.dev6"
-cloudpickle = "^2.0"
+cloudpickle = ">=2.0,<4.0"
 databricks-cli = ">=0.17.7"
 gcsfs = ">=2024"
 google-auth = "^2.23.2"
