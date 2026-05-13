@@ -32,6 +32,7 @@ def test_run_twice():
     """Tests that if the executor is run twice
     the second run executes the function again and stores it in a unique file.
     """
+    mocked_addition.reset_mock()
 
     executor = LocalExecutor(func=mocked_addition)
 
@@ -46,7 +47,7 @@ def test_new_executor():
     """
     Tests generating a new executor from an existing one.
     """
-    mocked_addition.call_count = 0
+    mocked_addition.reset_mock()
 
     executor1 = LocalExecutor(func=mocked_addition)
     result1 = executor1.run()

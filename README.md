@@ -6,11 +6,11 @@ Cascade is a library for submitting and managing jobs across multiple cloud envi
 
 ### Installation
   
-  ```bash 
-  poetry add block-cascade
-  ```
-or 
+```bash
+uv add block-cascade
 ```
+or
+```bash
 pip install block-cascade
 ```
 
@@ -74,9 +74,9 @@ However, for authenticating to Databricks and AWS you will need to provide a tok
 ## For Developers
 
 ### Using hermit for managing Python
-When developing cascade, you can optionally use [hermit](https://cashapp.github.io/hermit/usage/get-started/) to manage the Python executable used by cascade. Together with using poetry to manage dependencies, this will ensure that your development environment is identical to other contributors. Follow the linked instructions for installing hermit and then you can create a virtualenv with Python@3.9 by running:
+When developing cascade, you can optionally use [hermit](https://cashapp.github.io/hermit/usage/get-started/) to manage the Python executable used by cascade. Together with using uv to manage dependencies, this will ensure that your development environment is identical to other contributors. Follow the linked instructions for installing hermit and then you can create a virtualenv with Python@3.9 by running:
 
 `. ./bin/activate-hermit`
 
-Then, install the dependencies with poetry:
-`poetry install`
+Then, install the dependencies with uv:
+`uv sync`

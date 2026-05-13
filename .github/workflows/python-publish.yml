@@ -3,7 +3,7 @@ name: Upload Python Package
 on:
   push:
     branches:
-      - main  
+      - main
 
 jobs:
   deploy:
@@ -14,20 +14,16 @@ jobs:
       id-token: write
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.x'
-    - name: Install poetry
+    - name: Install uv
       run: |
-        python -m pip install --upgrade pip
-        pip install poetry
-    - name: Install dependencies
-      run: |
-        poetry install
+        pipx install uv
     - name: Build
       run: |
-        poetry build
+        uv build
     - name: Publish package to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b
